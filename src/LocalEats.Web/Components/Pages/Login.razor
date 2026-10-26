@@ -1,5 +1,6 @@
 @page "/login"
 @using LocalEats.Application.Users
+@using LocalEats.Application.Security
 @inject LoginService LoginService
 @inject ILogger<Login> Logger
 
@@ -49,7 +50,13 @@
         {
             if (await LoginService.SignInAsync(Input))
             {
-                HttpContext?.Response.Redirect(ReturnUrlPolicy.Normalize(ReturnUrl));
+                var destination = ReturnUrlPolicy.Normalize(ReturnUrl);
+                if (destination == "/session" && ReturnUrl != "/session"
+                    && HttpContext?.User.IsInRole(RoleNames.Customer) == true)
+                {
+                    destination = "/dashboard";
+                }
+                HttpContext?.Response.Redirect(destination);
                 return;
             }
         }

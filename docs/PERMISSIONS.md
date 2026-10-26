@@ -9,7 +9,7 @@ Identity creates signed role claims at login. Both hosts register the same polic
 | Register/login | Public | Public | Public | Public |
 | /session and logout confirmation | Login redirect | Allow | Allow | Allow |
 | /account profile read/edit | Login redirect | Own only | Own only | Own only |
-| /session/customer — CustomerAccess | Login redirect | Allow | Deny | Deny |
+| /dashboard and /session/customer — CustomerAccess | Login redirect | Allow | Deny | Deny |
 | /manager — ManagerAccess | Login redirect | Deny | Allow | Deny |
 | /admin — AdminAccess | Login redirect | Deny | Deny | Allow |
 | Existing customer-owned order through central service | Deny | Own only | Deny until assigned-restaurant support | Allow |
@@ -17,7 +17,7 @@ Identity creates signed role claims at login. Both hosts register the same polic
 
 Roles have no implicit hierarchy. A multi-role account receives only the union of its explicitly assigned roles. Admin operations use AdminAccess; an Admin-only account does not impersonate a Customer/Manager dashboard. Public registration always assigns Customer and accepts no role input.
 
-The three role entry pages are minimal authorization shells. Customer/manager/admin dashboard features remain TASK-011/012/013. Cookie middleware challenges anonymous requests to /login with a validated local return URL. Signed-in users with the wrong role go to /access-denied. Route metadata enforces authorization on the server even for direct URL requests; hiding navigation links is only a presentation choice.
+The three role entry pages are minimal authorization shells. The customer dashboard is implemented in TASK-011; manager/admin dashboard features remain TASK-012/013. Cookie middleware challenges anonymous requests to /login with a validated local return URL. Signed-in users with the wrong role go to /access-denied. Route metadata enforces authorization on the server even for direct URL requests; hiding navigation links is only a presentation choice.
 
 ## Resource ownership
 

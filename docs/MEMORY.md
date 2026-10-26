@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-010 application shell implemented. TASK-011 customer dashboard is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-011 customer dashboard implemented. TASK-012 manager dashboard is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-011 - Build the customer dashboard (not started)**
+**TASK-012 - Build the manager dashboard (not started)**
 
 ### Current task objective
 
-Build the customer dashboard in TASK-011. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Build the manager dashboard in TASK-012. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-010 complete. TASK-011 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-011 complete. TASK-012 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-011 - Build customer dashboard.
-2. TASK-012 - Build the manager dashboard.
+1. TASK-012 - Build manager dashboard.
+2. TASK-013 - Build the admin dashboard.
 
 ## 6. Known Decisions
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-011: Build the customer dashboard.
+We are starting TASK-012: Build the manager dashboard.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -404,3 +404,13 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Browser checked widths 375, 768 and 1440: no horizontal overflow; menu Enter toggles correctly and keyboard focus outline is visible. One main landmark confirmed.
 - Hosted CI and portable source hash verification follow. Next: TASK-011 customer dashboard. No restaurant ordering features implemented in this task.
 - TASK-010 hosted CI passed every step: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40410480390 . Feature commit b0ecabe is published on main. Desktop MY_PROJECT refreshed and all 131 portable files matched SHA-256 hashes; final memory copied after this entry. Normal Web host remains running at http://127.0.0.1:5015/ . GitHub action runtime deprecation notices remain non-blocking CI maintenance.
+
+### 2026-10-27 - TASK-011 customer dashboard
+
+- Added CustomerAccess-protected /dashboard with profile-based encoded welcome, streamed loading, safe profile-load error/retry, recent-order placeholder and account/logout actions. Profile reads use the existing Application service, never direct component database access.
+- Default Customer login now redirects to /dashboard; explicit safe local return URLs remain honored. Manager/Admin defaults stay at /session. Existing customer entry route remains compatible; shared Customer navigation links to the dashboard.
+- Added public /restaurants coming-soon destination so the browse link works without pretending TASK-017 directory is complete. No order queries/counts or restaurant listing are implemented. Placeholders intentionally describe future availability rather than claiming the user's order history is empty.
+- No dependency or schema changes; no migration required. Added 8 HTTP cases for dashboard authorization, encoded greeting, placeholder links, and default/local-return login behavior.
+- Formatting passed; Release build passed with zero warnings/errors; all 88 tests passed (1 Domain, 38 Application, 49 HTTP/database), zero failures/skips. E2E automation remains TASK-045.
+- Browser verified registration, default sign-in to /dashboard, widths 375/768/1440 without overflow, restaurant placeholder and sign-out. Removed the disposable dashboard-ui-20261027@example.test user afterward; real users were unchanged.
+- Hosted CI and Desktop MY_PROJECT sync/hash verification follow. Next: TASK-012 manager dashboard. Normal development Web host remains available at http://127.0.0.1:5015/ .

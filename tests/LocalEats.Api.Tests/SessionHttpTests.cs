@@ -67,12 +67,46 @@ public sealed class SessionHttpTests : IAsyncLifetime
         using var client = Client();
         await Login(client, email, Password, "/");
         var html = await client.GetStringAsync("/");
-        Assert.Contains("href=\"/session/customer\"", html);
+        Assert.Contains("href=\"/dashboard\"", html);
         Assert.Contains("href=\"/account\"", html);
         Assert.Contains("href=\"/logout\"", html);
         Assert.DoesNotContain("href=\"/manager\"", html);
         Assert.DoesNotContain("href=\"/admin\"", html);
         Assert.DoesNotContain("href=\"/login\"", html);
+    }
+
+    [Fact]
+    public async Task Dashboard_Customer_ShowsEncodedWelcomeAndHonestPlaceholders()
+    {
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await users.FindByEmailAsync(email);
+            Assert.NotNull(user);
+            user.DisplayName = "<script>alert(1)</script>";
+            Assert.True((await users.UpdateAsync(user)).Succeeded);
+        }
+        using var client = Client();
+        await Login(client, email, Password);
+        var html = await client.GetStringAsync("/dashboard");
+        Assert.Contains("Welcome, &lt;script&gt;alert(1)&lt;/script&gt;!", html);
+        Assert.DoesNotContain("<script>alert(1)</script>", html);
+        Assert.Contains("Order history is coming soon", html);
+        Assert.Contains("href=\"/restaurants\"", html);
+        Assert.Contains("href=\"/account\"", html);
+        Assert.Contains("href=\"/logout\"", html);
+        Assert.Contains("Restaurant browsing is coming soon", await client.GetStringAsync("/restaurants"));
+    }
+
+    [Theory]
+    [InlineData("", "/dashboard")]
+    [InlineData("/account", "/account")]
+    [InlineData("/session", "/session")]
+    public async Task Login_Customer_UsesDashboardDefaultAndPreservesLocalReturn(string returnUrl, string expected)
+    {
+        using var client = Client();
+        var response = await Login(client, email, Password, returnUrl);
+        Assert.Equal(expected, response.Headers.Location?.ToString());
     }
 
     [Fact]
@@ -90,7 +124,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
         using var client = Client();
         var response = await Login(client, email, Password, "//example.com");
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("/session", response.Headers.Location?.ToString());
+        Assert.Equal("/dashboard", response.Headers.Location?.ToString());
         var cookie = Assert.Single(response.Headers.GetValues("Set-Cookie"), value => value.StartsWith("LocalEats.Auth=", StringComparison.Ordinal));
         Assert.Contains("httponly", cookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("secure", cookie, StringComparison.OrdinalIgnoreCase);
@@ -182,6 +216,9 @@ public sealed class SessionHttpTests : IAsyncLifetime
 
     [Theory]
     [InlineData(ApplicationRoles.Customer, "/session/customer", true)]
+    [InlineData(ApplicationRoles.Customer, "/dashboard", true)]
+    [InlineData(ApplicationRoles.Manager, "/dashboard", false)]
+    [InlineData(ApplicationRoles.Admin, "/dashboard", false)]
     [InlineData(ApplicationRoles.Customer, "/manager", false)]
     [InlineData(ApplicationRoles.Customer, "/admin", false)]
     [InlineData(ApplicationRoles.Manager, "/session/customer", false)]
@@ -217,6 +254,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
 
     [Theory]
     [InlineData("/session/customer")]
+    [InlineData("/dashboard")]
     [InlineData("/manager")]
     [InlineData("/admin")]
     public async Task RolePages_Anonymous_RedirectsToLogin(string path)

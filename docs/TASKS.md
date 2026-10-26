@@ -214,12 +214,12 @@ Acceptance criteria:
 
 ## TASK-011: Build the customer dashboard
 
-- [ ] Create `/dashboard`.
-- [ ] Show a welcome message.
-- [ ] Show recent orders placeholder or empty state.
-- [ ] Show a link to browse restaurants.
-- [ ] Show account and logout actions.
-- [ ] Add loading and empty states.
+- [x] Create `/dashboard`.
+- [x] Show a welcome message.
+- [x] Show recent orders placeholder or empty state.
+- [x] Show a link to browse restaurants.
+- [x] Show account and logout actions.
+- [x] Add loading and empty states.
 
 Acceptance criteria:
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 3 - Customer Dashboard
-- Current task: TASK-011
-- Branch: `codex/task-010-shell`
+- Current task: TASK-012
+- Branch: `codex/task-011-dashboard`
 - Status: [ ] Not started
-- Last completed task: TASK-010 - Create the application shell
-- Next task: TASK-011 - Build the customer dashboard
+- Last completed task: TASK-011 - Build the customer dashboard
+- Next task: TASK-012 - Build the manager dashboard
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

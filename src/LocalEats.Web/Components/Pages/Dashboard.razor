@@ -1,0 +1,68 @@
+@page "/dashboard"
+@using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Security
+@using LocalEats.Application.Users.Profile
+@attribute [Authorize(Policy = RolePolicies.Customer)]
+@attribute [StreamRendering]
+@inject ProfileService Profiles
+@inject ILogger<Dashboard> Logger
+
+<PageTitle>Your dashboard | LocalEats</PageTitle>
+<section class="dashboard" aria-labelledby="dashboard-heading">
+    <p class="eyebrow">Your LocalEats</p>
+    <h1 id="dashboard-heading">Welcome@(!string.IsNullOrWhiteSpace(profile?.DisplayName) ? $", {profile.DisplayName}" : " back")!</h1>
+    @if (loading)
+    {
+        <p role="status">Loading your dashboard…</p>
+    }
+    else if (failed)
+    {
+        <p role="alert">We couldn’t load your account details. Please try again.</p>
+        <a href="/dashboard">Reload dashboard</a>
+    }
+    <p>Your account is ready. Restaurant browsing and ordering are coming soon.</p>
+    <div class="dashboard-grid">
+        <section class="dashboard-card" aria-labelledby="orders-heading">
+            <h2 id="orders-heading">Recent orders</h2>
+            <p>Order history is coming soon</p>
+            <p>When ordering is available, your recent orders will appear here.</p>
+            <a class="button-link" href="/restaurants">Browse restaurants</a>
+        </section>
+        <section class="dashboard-card" aria-labelledby="account-heading">
+            <h2 id="account-heading">Your account</h2>
+            <p>Keep your name and contact number up to date.</p>
+            <p><a href="/account">Manage my account</a></p>
+            <p><a href="/logout">Sign out</a></p>
+        </section>
+    </div>
+</section>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private ProfileSnapshot? profile;
+    private bool loading = true;
+    private bool failed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (HttpContext is not null)
+            {
+                profile = await Profiles.GetAsync(HttpContext.User);
+            }
+            failed = profile is null;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Dashboard profile load failed with error type {ErrorType}.", exception.GetType().Name);
+            failed = true;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

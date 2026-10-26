@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-011 - Build the customer dashboard
+TASK-012 - Build the manager dashboard
 ```
 
 
@@ -205,3 +205,7 @@ Customer, Manager and Admin entry pages require their explicit signed-in roles o
 ## Account/profile (TASK-009)
 
 After signing in, open `/account` or select Your account from `/session`. Email is readonly. Name and phone are optional (100 and 32 character limits); phone syntax is validated without imposing a country or verifying the number. Changes affect only the signed-in user. A stale edit requires reload rather than overwriting newer changes. The display-name field is created by the included migration; development startup applies it automatically. No email/password-change or account-deletion flow is included in this task.
+
+## Customer dashboard (TASK-011)
+
+Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens a coming-soon page until TASK-017; ordering and order history are not implemented yet. Explicit safe local login return URLs remain honored.

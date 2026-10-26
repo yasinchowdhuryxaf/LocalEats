@@ -5,7 +5,7 @@
 {
     @if (HttpContext.User.IsInRole(RoleNames.Customer))
     {
-        <a href="/session/customer">Customer area</a>
+        <a href="/dashboard">Dashboard</a>
     }
     @if (HttpContext.User.IsInRole(RoleNames.Manager))
     {

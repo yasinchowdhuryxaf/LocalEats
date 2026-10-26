@@ -10,6 +10,12 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<LoginService>();
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.ConfigureApplicationCookie(options =>
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always);
+}
 
 var app = builder.Build();
 

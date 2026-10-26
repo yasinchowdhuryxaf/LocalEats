@@ -1,0 +1,10 @@
+@page "/session"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<PageTitle>Signed in | LocalEats</PageTitle>
+<main class="auth-page">
+    <h1>You are signed in</h1>
+    <p>Your LocalEats session is active.</p>
+    <a href="/logout">Sign out</a>
+</main>

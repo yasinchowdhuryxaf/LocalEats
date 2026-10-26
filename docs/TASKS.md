@@ -154,12 +154,14 @@ Tests:
 
 ## TASK-007: Build login and logout
 
-- [ ] Create the login page.
-- [ ] Implement login using Identity.
-- [ ] Implement logout.
-- [ ] Handle invalid credentials safely.
-- [ ] Add a return URL only after validating it as a local URL.
-- [ ] Add session/cookie configuration.
+Status: [x] Complete — verification recorded in MEMORY.md.
+
+- [x] Create the login page.
+- [x] Implement login using Identity.
+- [x] Implement logout.
+- [x] Handle invalid credentials safely.
+- [x] Add a return URL only after validating it as a local URL.
+- [x] Add session/cookie configuration.
 
 Tests:
 
@@ -701,11 +703,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 2 - Authentication
-- Current task: TASK-007
-- Branch: `codex/task-006-registration`
+- Current task: TASK-008
+- Branch: `codex/task-007-login-logout`
 - Status: [ ] Not started
-- Last completed task: TASK-006 - Build registration
-- Next task: TASK-007 - Build login and logout
-- Known issues: E2E automation remains a later task. Login/logout is next; registration is implemented.
+- Last completed task: TASK-007 - Build login and logout
+- Next task: TASK-008 - Add role and policy authorization
+- Known issues: E2E automation remains a later task. Role/resource policy enforcement is next.
 
 Update this section after every completed task.

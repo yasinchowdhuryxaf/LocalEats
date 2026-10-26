@@ -40,9 +40,12 @@ public static class DependencyInjection
             options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
             options.LoginPath = "/login";
             options.AccessDeniedPath = "/access-denied";
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.SlidingExpiration = true;
         });
         services.AddAuthorization();
         services.AddScoped<IRegistrationStore, IdentityRegistrationStore>();
+        services.AddScoped<ISessionStore, IdentitySessionStore>();
 
         services.AddHealthChecks()
             .AddCheck<Persistence.PostgresHealthCheck>("postgresql");

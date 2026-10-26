@@ -1,0 +1,35 @@
+@page "/logout"
+@using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Users
+@attribute [Authorize]
+@inject LoginService LoginService
+
+<PageTitle>Sign out | LocalEats</PageTitle>
+<main class="auth-page">
+    <h1>Sign out</h1>
+    <p>Sign out of LocalEats on this browser?</p>
+    <EditForm Model="Input" OnSubmit="SignOutAsync" FormName="logout" Enhance="false">
+        <button type="submit">Sign out</button>
+    </EditForm>
+    <a href="/session">Stay signed in</a>
+</main>
+
+@code {
+    [SupplyParameterFromForm]
+    public LogoutInput Input { get; set; }
+
+    public Logout() => Input = new LogoutInput();
+
+    protected override void OnInitialized() => Input ??= new LogoutInput();
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private async Task SignOutAsync()
+    {
+        await LoginService.SignOutAsync();
+        HttpContext?.Response.Redirect("/login");
+    }
+
+    public sealed class LogoutInput;
+}

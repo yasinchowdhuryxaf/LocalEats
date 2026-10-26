@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-006 registration implemented. TASK-007 login/logout is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-007 login/logout implemented. TASK-008 authorization is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,22 +112,21 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-007 - Build login and logout (not started)**
+**TASK-008 - Add role and policy authorization (not started)**
 
 ### Current task objective
 
-Build login/logout in TASK-007 using Identity. Registration is complete; no login page or sign-in flow has been implemented yet.
+Add role policies and resource ownership checks in TASK-008. Registration and login/logout are implemented.
 
 ### Current status
 
-TASK-001 through TASK-006 complete. TASK-007 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-007 complete. TASK-008 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-007 - Build login and logout.
-2. TASK-008 - Add role and resource authorization.
-3. TASK-009 - Add account page.
-4. TASK-010 - Create the application shell.
+1. TASK-008 - Add role and resource authorization.
+2. TASK-009 - Add account page.
+3. TASK-010 - Create the application shell.
 
 ## 6. Known Decisions
 
@@ -271,7 +270,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-007: Build login and logout.
+We are starting TASK-008: Add role and policy authorization.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -354,3 +353,15 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Next: TASK-007 login/logout. Current branch: codex/task-006-registration.
 
 - TASK-006 hosted CI passed all steps with ephemeral PostgreSQL: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40402522924 . Feature commit e671cb4 is published on main. Formatting, Release build and all 16 tests pass both locally and in GitHub. Portable source sync verified for all 93 files; the final memory record is copied after this entry.
+
+### 2026-10-27 - TASK-007 login/logout
+
+- Added Application login request/service, session-store interface and local return URL policy. Infrastructure uses Identity SignInManager with lockoutOnFailure; password hashing remains Identity-owned.
+- Added static server-rendered /login and /logout forms so cookie writes occur in HTTP requests. Invalid/unknown/locked accounts show the same safe error. Password clears after server submission. Logout requires antiforgery-protected authenticated POST; GET is a confirmation page.
+- Added /session as a minimal authenticated test/status route plus /access-denied. Account and dashboard pages remain their own tasks. Registration success and homepage link to sign-in.
+- Cookies are HttpOnly, Lax, eight-hour sliding expiry, persistent when RememberMe is selected; HTTPS-only outside Development. Standard logout clears this browser's cookie; account-wide ticket revocation and cross-host shared cookies remain deployment/security decisions. See docs/SECURITY.md.
+- Added test-only Microsoft.AspNetCore.Mvc.Testing for actual HTTP request verification. Tests verify sign-in/out, protected anonymous redirects, unsafe return URLs, generic errors, antiforgery on both forms, persistent cookie and five-failure lockout. PostgreSQL test classes are serialized and use the dedicated _tests DB.
+- Browser verified disposable registration → invalid login → valid login → sign-out → protected-page redirect. Removed the disposable test user afterward. Screenshot proof: outputs/login-success.png (excluded from portable source).
+- Formatting passed; Release build passed with zero warnings/errors; all 33 tests passed (1 Domain, 15 Application, 17 API/HTTP/database), no failures/skips. E2E project remains a placeholder for TASK-045.
+- No schema change or migration required. No new runtime dependency; test-host package only.
+- Hosted CI and Desktop MY_PROJECT hash verification follow successful local checks. Next task: TASK-008 authorization. Branch: codex/task-007-login-logout.

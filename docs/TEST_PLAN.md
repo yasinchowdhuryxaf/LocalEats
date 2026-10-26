@@ -37,3 +37,7 @@ Compiler/analyzer warnings and dependency audit warnings fail the build/restore.
 `.github/workflows/ci.yml` runs restore, tool restore, formatting, Release build and tests on pushes and pull requests. Each failing command fails the job. Test results are retained as artifacts. An ephemeral PostgreSQL service supplies the registration test database; production and local application data are never used by CI. TASK-048 extends coverage to the later business workflows.
 
 GitHub execution and its badge require a GitHub repository remote and a push. Local verification is recorded separately from hosted status.
+
+## Login/logout HTTP checks (TASK-007)
+
+The API test project references the Web host and Microsoft.AspNetCore.Mvc.Testing (test-only) to send actual HTTP form requests through an in-process host. Tests use the same dedicated `_tests` PostgreSQL database; PostgreSQL test classes run serially and remove only their generated users. Covered: authentication/anonymous access, generic failure messages, local-only return URLs, protected logout POST, cookies, remember option, and lockout. Browser verification also exercised registration → failed login → successful login → logout → protected-page redirect with a disposable test account.

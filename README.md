@@ -4,7 +4,7 @@ LocalEats is a C# food-ordering platform built with Blazor, ASP.NET Core, and Po
 
 ## Current status
 
-TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is implemented at `/register`. Login/logout is next in TASK-007. Basic persistence entities exist; restaurant and ordering features are still pending.
+TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is implemented at `/register`. Login/logout is implemented at /login and /logout; role/resource authorization is next in TASK-008. Basic persistence entities exist; restaurant and ordering features are still pending.
 
 ## Technology
 
@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-007 - Build login and logout
+TASK-008 - Add role and policy authorization
 ```
 
 
@@ -190,3 +190,8 @@ docker compose exec postgres createdb -U localeats localeats_registration_tests
 ```
 
 If it already exists, retain it. See `docs/TEST_PLAN.md` for `LOCALEATS_TEST_CONNECTION` and the full verification procedure. CI creates its own temporary PostgreSQL service.
+
+
+## Sign-in and sign-out (TASK-007)
+
+Open `/login` after registering. Successful sign-in opens `/session` (a protected status page). `/logout` shows confirmation and submits a protected POST to sign out. Invalid credentials and lockout use the same generic message. Sessions use an eight-hour sliding cookie; the remember option persists it across browser restarts. Production cookies require HTTPS. Role policies, account pages and dashboards follow in later tasks. See `docs/SECURITY.md` for the current scope and deployment requirements.

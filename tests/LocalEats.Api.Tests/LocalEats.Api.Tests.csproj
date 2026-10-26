@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
@@ -20,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LocalEats.Api\LocalEats.Api.csproj" />
+    <ProjectReference Include="..\..\src\LocalEats.Web\LocalEats.Web.csproj" />
   </ItemGroup>
 
 </Project>

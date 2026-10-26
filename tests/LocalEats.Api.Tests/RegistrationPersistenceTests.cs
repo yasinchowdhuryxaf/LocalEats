@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace LocalEats.Api.Tests;
 
+[Collection("PostgreSQL")]
 public sealed class RegistrationPersistenceTests : IAsyncLifetime
 {
     private ServiceProvider? provider;

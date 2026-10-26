@@ -100,7 +100,7 @@ These documents should be copied into the repository under `docs/` where appropr
 - [x] Initialized Git and added a .NET-oriented `.gitignore`.
 - [x] Added `global.json` for the installed .NET SDK.
 - [x] InitialDatabaseFoundation and AddIdentity migrations applied and verified in local PostgreSQL.
-- [x] Identity persistence, middleware, development roles and registration implemented; login/logout UI is next.
+- [x] Identity persistence, registration, login/logout, role/ownership checks and self-service account/profile editing implemented.
 - [x] Registration page implemented at /register with browser-verified success and error states.
 - [x] GitHub Actions pipeline connected; includes a separate PostgreSQL service for registration tests.
 
@@ -108,7 +108,7 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current phase
 
-**Phase 2 - Authentication**
+**Phase 3 - Customer Dashboard**
 
 ### Current task
 
@@ -391,3 +391,6 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Added 10 Application cases and 9 real HTTP/PostgreSQL account cases: own-only changes despite tampered IDs/email, optional/invalid fields, stale form rejection, antiforgery, deleted-user load error, HTML encoding and clearing previous phone verification.
 - Formatting passed; Release build passed with zero warnings/errors; all 78 tests passed (1 Domain, 38 Application, 39 API/HTTP/database), no failures/skips. E2E automation remains TASK-045; these account UI handlers are exercised through the HTTP test host.
 - Hosted CI and Desktop MY_PROJECT refresh/hash verification follow local verification. Next task: TASK-010 application shell. Branch: codex/task-009-account.
+
+- TASK-009 hosted CI passed all steps, including migration and profile security/concurrency tests: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40409142236 . Feature commit 0528548 is published on main.
+- Desktop MY_PROJECT refreshed; all 130 portable files matched SHA-256 hashes. The final memory record is copied after this entry. Normal local development Web host is running at http://127.0.0.1:5015/account (sign-in required). No real user credentials or privileged roles were changed; the display-name migration preserves existing user records.

@@ -125,7 +125,7 @@ TASK-001 through TASK-010 complete. TASK-011 is next. See the latest activity en
 ## 5. Next Tasks
 
 1. TASK-011 - Build customer dashboard.
-2. TASK-012 - Follow the next dashboard task in TASKS.md.
+2. TASK-012 - Build the manager dashboard.
 
 ## 6. Known Decisions
 
@@ -403,3 +403,4 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Added anonymous and Customer HTTP navigation tests. Formatting passed; Release build passed with zero warnings/errors; all 80 tests passed (1 Domain, 38 Application, 41 HTTP/database), zero failures/skips. E2E automation remains TASK-045.
 - Browser checked widths 375, 768 and 1440: no horizontal overflow; menu Enter toggles correctly and keyboard focus outline is visible. One main landmark confirmed.
 - Hosted CI and portable source hash verification follow. Next: TASK-011 customer dashboard. No restaurant ordering features implemented in this task.
+- TASK-010 hosted CI passed every step: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40410480390 . Feature commit b0ecabe is published on main. Desktop MY_PROJECT refreshed and all 131 portable files matched SHA-256 hashes; final memory copied after this entry. Normal Web host remains running at http://127.0.0.1:5015/ . GitHub action runtime deprecation notices remain non-blocking CI maintenance.

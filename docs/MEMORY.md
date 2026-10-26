@@ -365,3 +365,6 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Formatting passed; Release build passed with zero warnings/errors; all 33 tests passed (1 Domain, 15 Application, 17 API/HTTP/database), no failures/skips. E2E project remains a placeholder for TASK-045.
 - No schema change or migration required. No new runtime dependency; test-host package only.
 - Hosted CI and Desktop MY_PROJECT hash verification follow successful local checks. Next task: TASK-008 authorization. Branch: codex/task-007-login-logout.
+
+- TASK-007 hosted CI passed all steps, including PostgreSQL-backed HTTP session tests: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40405927756 . Feature commit 0befc7a is published on main.
+- Desktop MY_PROJECT refreshed and all 107 portable files matched SHA-256 hashes. Final memory record copied after this entry. The normal Web app is left running at http://127.0.0.1:5015/login against the localeats development database; disposable browser credentials were removed from the test database.

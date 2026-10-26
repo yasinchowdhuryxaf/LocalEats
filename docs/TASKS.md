@@ -135,12 +135,14 @@ Acceptance criteria:
 
 ## TASK-006: Build registration
 
-- [ ] Create the registration page.
-- [ ] Add email, password, and password confirmation fields.
-- [ ] Add server-side validation.
-- [ ] Add duplicate-email handling.
-- [ ] Assign the Customer role by default.
-- [ ] Add loading, success, and error states.
+Status: [x] Complete — local verification and hosted CI recorded in MEMORY.md.
+
+- [x] Create the registration page.
+- [x] Add email, password, and password confirmation fields.
+- [x] Add server-side validation.
+- [x] Add duplicate-email handling.
+- [x] Assign the Customer role by default.
+- [x] Add loading, success, and error states.
 
 Tests:
 
@@ -698,12 +700,12 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 ## Current Work
 
-- Current phase: Phase 1 - Project Setup
-- Current task: TASK-006
-- Branch: `codex/task-005-identity`
+- Current phase: Phase 2 - Authentication
+- Current task: TASK-007
+- Branch: `codex/task-006-registration`
 - Status: [ ] Not started
-- Last completed task: TASK-005 - Add application user and Identity
-- Next task: TASK-006 - Build registration
-- Known issues: Application and E2E test projects remain placeholders. Login and registration UI are separate upcoming tasks.
+- Last completed task: TASK-006 - Build registration
+- Next task: TASK-007 - Build login and logout
+- Known issues: E2E automation remains a later task. Login/logout is next; registration is implemented.
 
 Update this section after every completed task.

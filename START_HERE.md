@@ -33,6 +33,7 @@ docker compose ps
 dotnet tool restore
 dotnet restore LocalEats.slnx
 dotnet build LocalEats.slnx
+docker compose exec postgres createdb -U localeats localeats_registration_tests
 dotnet test LocalEats.slnx
 ```
 
@@ -60,17 +61,17 @@ Before changing code, ask Codex to read:
 The next task is:
 
 ```text
-TASK-006 - Build registration
+TASK-007 - Build login and logout
 ```
 
-TASK-001 through TASK-004 are implemented. Database migrations, development sample data and build/CI configuration are included. TASK-005 added Identity accounts and roles. TASK-006 adds registration.
+TASK-001 through TASK-004 are implemented. Database migrations, development sample data and build/CI configuration are included. TASK-005 added Identity accounts and roles. TASK-006 added registration at /register. TASK-007 adds login/logout.
 
 Use this first Codex prompt:
 
 ```text
 Read AGENTS.md and all files inside docs/.
 
-We are starting TASK-006 from docs/TASKS.md.
+We are starting TASK-007 from docs/TASKS.md.
 First inspect the current solution and provide a plan.
 Do not edit files until the plan is clear.
 ```

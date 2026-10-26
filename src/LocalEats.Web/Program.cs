@@ -1,3 +1,4 @@
+using LocalEats.Application.Users;
 using LocalEats.Infrastructure;
 using LocalEats.Infrastructure.Persistence.Seed;
 using LocalEats.Web.Components;
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 
 var app = builder.Build();
 

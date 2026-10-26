@@ -1,3 +1,4 @@
+using LocalEats.Application.Users;
 using LocalEats.Infrastructure.Identity;
 using LocalEats.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -41,6 +42,7 @@ public static class DependencyInjection
             options.AccessDeniedPath = "/access-denied";
         });
         services.AddAuthorization();
+        services.AddScoped<IRegistrationStore, IdentityRegistrationStore>();
 
         services.AddHealthChecks()
             .AddCheck<Persistence.PostgresHealthCheck>("postgresql");

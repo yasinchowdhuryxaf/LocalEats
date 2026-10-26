@@ -4,7 +4,7 @@ LocalEats is a C# food-ordering platform built with Blazor, ASP.NET Core, and Po
 
 ## Current status
 
-TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is next in TASK-006. Basic persistence entities exist; restaurant and ordering features are still pending.
+TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is implemented at `/register`. Login/logout is next in TASK-007. Basic persistence entities exist; restaurant and ordering features are still pending.
 
 ## Technology
 
@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-006 - Build registration
+TASK-007 - Build login and logout
 ```
 
 
@@ -178,3 +178,15 @@ Shared build/analyzer settings are in `Directory.Build.props`; dependency versio
 ## Portable copy after each completed task
 
 The working source is this workspace. After each successful task, refresh `C:\Users\acer\Desktop\MY_PROJECT` with source, documentation, configuration, migrations, local tool manifest and CI files. Exclude `.git`, `bin`, `obj`, `work`, `outputs`, `TestResults`, `.env`, user secrets and machine-specific data. Compare copied file hashes before reporting success. Copying source does not copy Docker database volumes; a new computer recreates the sample database through migrations and development seeding.
+
+## Registration (TASK-006)
+
+Open `http://localhost:5015/register`. A valid email, a 12–128 character password meeting Identity complexity rules, and matching confirmation create a Customer account. Registration does not sign the user in. Existing/duplicate accounts receive a safe error. Passwords are never logged or stored as plain text. Customer role provisioning must be completed in production before registration is enabled (development startup already seeds it).
+
+The full test suite now needs a separate local PostgreSQL database. Create it once after starting Docker:
+
+```powershell
+docker compose exec postgres createdb -U localeats localeats_registration_tests
+```
+
+If it already exists, retain it. See `docs/TEST_PLAN.md` for `LOCALEATS_TEST_CONNECTION` and the full verification procedure. CI creates its own temporary PostgreSQL service.

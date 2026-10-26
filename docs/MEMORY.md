@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-005 Identity foundation implemented. GitHub CI is connected and passing. TASK-006 registration is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-006 registration implemented. TASK-007 login/logout is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,7 +112,7 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-006 - Build registration (not started)**
+**TASK-007 - Build login and logout (not started)**
 
 ### Current task objective
 
@@ -272,7 +272,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-006: Build registration.
+We are starting TASK-007: Build login and logout.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -342,3 +342,14 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Portable copy sync: completed 2026-10-27; all 83 portable files matched SHA-256 hashes. Next task is TASK-006 registration.
 
 - TASK-005 hosted CI verified: run 40400739493 passed all steps on GitHub Linux: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40400739493 . Commit b5db5e7 is published on main. Portable copy contains the verified Identity implementation and updated memory.
+
+### 2026-10-27 - TASK-006 registration
+
+- Added Application registration request/result, service validation and persistence interface; Infrastructure implements Identity account creation and Customer role assignment in one PostgreSQL transaction with an operation-specific EF scope.
+- Added /register with email/password/confirmation, field validation, safe duplicate errors, submitting/disabled, success and retry states. Password fields clear after server submission. Homepage links to registration. No automatic sign-in; login is TASK-007.
+- Identity owns hashing and password complexity; registration never accepts client-selected roles. Duplicate races are handled by the normalized username unique index. Error responses and logs exclude passwords/provider details.
+- Added 6 Application validation tests and 4 real PostgreSQL persistence tests for valid hashing/Customer-only roles, case-insensitive duplicates, weak passwords, and concurrent duplicate requests. CI now uses an ephemeral PostgreSQL service. The local test DB is localeats_registration_tests; tests reject non-_tests databases and clean only their own test users.
+- Browser verified mismatch errors, successful account creation, and duplicate-safe failure. Browser verification caught and fixed input-binding behavior. Removed the single disposable browser test account afterward. Proof image: outputs/registration-success.png (not included in portable source).
+- No schema change/new migration or new runtime dependency was required. The E2E test project is still a placeholder for TASK-045.
+- Final formatting passed; Release build passed with zero warnings/errors; all 16 tests passed, zero failures/skips. Hosted CI and portable copy verification follow.
+- Next: TASK-007 login/logout. Current branch: codex/task-006-registration.

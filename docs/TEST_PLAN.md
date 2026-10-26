@@ -4,6 +4,15 @@
 
 Run from the repository root with the SDK selected by global.json:
 
+Start PostgreSQL and create the separate registration test database once before running the full suite:
+
+```powershell
+docker compose up -d postgres
+docker compose exec postgres createdb -U localeats localeats_registration_tests
+```
+
+If that database already exists, use it; do not recreate or delete it. Registration tests migrate it and remove only their own generated users. They reject database names that do not end in `_tests`. Set `LOCALEATS_TEST_CONNECTION` to use another dedicated PostgreSQL test database. The application database remains `localeats`.
+
 ```powershell
 dotnet restore LocalEats.slnx
 dotnet tool restore
@@ -20,11 +29,11 @@ Compiler/analyzer warnings and dependency audit warnings fail the build/restore.
 - Test method: `<Method>_<Condition>_<ExpectedResult>`.
 - Arrange inputs, perform one operation, then assert observable behavior.
 - Domain tests cover business rules; Application tests cover use cases; API tests cover boundaries and infrastructure integration; E2E tests cover browser journeys.
-- Current API foundation tests need no live database. Application and E2E projects are placeholders until their feature tasks; an empty project does not mean its features are tested.
+- Foundation/Identity unit tests need no live database. Registration persistence tests use the separate PostgreSQL test database. Application tests cover registration validation. The E2E project remains a placeholder; browser verification for TASK-006 was performed manually using the browser tool.
 - Real PostgreSQL migration/constraint tests belong to TASK-044 and browser automation to TASK-045.
 
 ## Hosted checks
 
-`.github/workflows/ci.yml` runs restore, tool restore, formatting, Release build and tests on pushes and pull requests. Each failing command fails the job. Test results are retained as artifacts. No deployment or database mutation occurs in this initial workflow. TASK-048 extends it with PostgreSQL integration coverage.
+`.github/workflows/ci.yml` runs restore, tool restore, formatting, Release build and tests on pushes and pull requests. Each failing command fails the job. Test results are retained as artifacts. An ephemeral PostgreSQL service supplies the registration test database; production and local application data are never used by CI. TASK-048 extends coverage to the later business workflows.
 
 GitHub execution and its badge require a GitHub repository remote and a push. Local verification is recorded separately from hosted status.

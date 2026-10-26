@@ -1,0 +1,105 @@
+@page "/register"
+@rendermode InteractiveServer
+@using LocalEats.Application.Users
+@inject IRegistrationService Registration
+@inject ILogger<Register> Logger
+
+<PageTitle>Create an account | LocalEats</PageTitle>
+
+<main class="registration">
+    <a href="/" class="brand">LocalEats</a>
+    <h1>Create your account</h1>
+    <p>Start with a customer account.</p>
+
+    @if (succeeded)
+    {
+        <div class="success" role="status">
+            <h2>Your account is ready</h2>
+            <p>Your customer account was created successfully.</p>
+            <a href="/">Return home</a>
+        </div>
+    }
+    else
+    {
+        <EditForm EditContext="editContext" OnValidSubmit="RegisterAsync" FormName="registration">
+            <DataAnnotationsValidator />
+            <div role="alert"><ValidationSummary /></div>
+            <fieldset disabled="@submitting" aria-busy="@submitting">
+                <label for="email">Email address</label>
+                <input id="email" type="email" @bind="model.Email" @bind:event="oninput" @bind:after="() => FieldChanged(nameof(model.Email))" autocomplete="email" maxlength="254" />
+                <ValidationMessage For="() => model.Email" />
+
+                <label for="password">Password</label>
+                <input id="password" type="password" @bind="model.Password" @bind:event="oninput" @bind:after="() => FieldChanged(nameof(model.Password))" autocomplete="new-password" maxlength="128" aria-describedby="password-help" />
+                <p id="password-help" class="hint">At least 12 characters with uppercase, lowercase, a number, and a symbol.</p>
+                <ValidationMessage For="() => model.Password" />
+
+                <label for="confirm-password">Confirm password</label>
+                <input id="confirm-password" type="password" @bind="model.ConfirmPassword" @bind:event="oninput" @bind:after="() => FieldChanged(nameof(model.ConfirmPassword))" autocomplete="new-password" maxlength="128" />
+                <ValidationMessage For="() => model.ConfirmPassword" />
+
+                <button type="submit">@(submitting ? "Creating account…" : "Create account")</button>
+            </fieldset>
+            <p role="status" aria-live="polite">@(submitting ? "Creating your account. Please wait." : string.Empty)</p>
+        </EditForm>
+    }
+</main>
+
+@code {
+    private readonly RegistrationRequest model = new();
+    private readonly EditContext editContext;
+    private readonly ValidationMessageStore messages;
+    private bool submitting;
+    private bool succeeded;
+
+    public Register()
+    {
+        editContext = new EditContext(model);
+        messages = new ValidationMessageStore(editContext);
+    }
+
+    protected override void OnInitialized()
+    {
+        editContext.OnValidationRequested += (_, _) => messages.Clear();
+        editContext.OnFieldChanged += (_, args) =>
+        {
+            messages.Clear(args.FieldIdentifier);
+            messages.Clear(new FieldIdentifier(model, string.Empty));
+            editContext.NotifyValidationStateChanged();
+        };
+    }
+
+    private async Task RegisterAsync()
+    {
+        if (submitting)
+        {
+            return;
+        }
+
+        submitting = true;
+        messages.Clear();
+        try
+        {
+            var result = await Registration.RegisterAsync(model);
+            succeeded = result.Succeeded;
+            foreach (var error in result.Errors)
+            {
+                messages.Add(new FieldIdentifier(model, error.Key), error.Value);
+            }
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Registration UI failed with error type {ErrorType}.", exception.GetType().Name);
+            messages.Add(new FieldIdentifier(model, string.Empty), "Something went wrong. Please try again.");
+        }
+        finally
+        {
+            model.Password = string.Empty;
+            model.ConfirmPassword = string.Empty;
+            submitting = false;
+            editContext.NotifyValidationStateChanged();
+        }
+    }
+
+    private void FieldChanged(string field) => editContext.NotifyFieldChanged(new FieldIdentifier(model, field));
+}

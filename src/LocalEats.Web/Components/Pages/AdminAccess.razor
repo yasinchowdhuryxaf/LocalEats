@@ -3,9 +3,27 @@
 @using LocalEats.Application.Security
 @attribute [Authorize(Policy = RolePolicies.Admin)]
 
-<PageTitle>Administration | LocalEats</PageTitle>
-<section class="auth-page">
-    <h1>Administration</h1>
-    <p>You are signed in with administrator access.</p>
-    <a href="/session">Your session</a>
+<PageTitle>Admin dashboard | LocalEats</PageTitle>
+<section class="admin-dashboard" aria-labelledby="admin-heading">
+    <p class="eyebrow">Platform administration</p>
+    <h1 id="admin-heading">Admin dashboard</h1>
+    <p>Your starting point for platform oversight. Management tools are coming in later project phases.</p>
+    <div class="admin-grid">
+        <section class="admin-card" aria-labelledby="pending-heading">
+            <h2 id="pending-heading">Pending restaurants</h2>
+            <p><strong>Count not available yet</strong></p>
+            <p>Pending restaurant counts will appear when the approval workflow is connected. No live count is shown here.</p>
+            <a href="/admin/restaurants">Manage restaurants</a>
+        </section>
+        <section class="admin-card" aria-labelledby="users-heading">
+            <h2 id="users-heading">Users</h2>
+            <p>User management is coming soon. No account details or role controls are exposed here.</p>
+            <a href="/admin/users">Manage users</a>
+        </section>
+        <section class="admin-card" aria-labelledby="account-heading">
+            <h2 id="account-heading">Your account</h2>
+            <p><a href="/account">Manage my account</a></p>
+            <p><a href="/logout">Sign out</a></p>
+        </section>
+    </div>
 </section>

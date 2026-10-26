@@ -1,0 +1,24 @@
+@page "/admin/restaurants"
+@page "/admin/users"
+@using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Security
+@attribute [Authorize(Policy = RolePolicies.Admin)]
+
+<PageTitle>@Title | LocalEats</PageTitle>
+<section class="auth-page">
+    <h1>@Title</h1>
+    <p>@Description</p>
+    <p>These tools are not available yet. No records are displayed or changed here.</p>
+    <a href="/admin">Back to admin dashboard</a>
+</section>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private bool IsUsers => HttpContext?.Request.Path.Value == "/admin/users";
+    private string Title => IsUsers ? "User management is coming soon" : "Restaurant management is coming soon";
+    private string Description => IsUsers
+        ? "User administration will be connected with the account security and audit controls in a later phase."
+        : "Restaurant review, approval and suspension will be connected in a later phase.";
+}

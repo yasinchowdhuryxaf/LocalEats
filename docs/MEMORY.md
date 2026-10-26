@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-012 manager dashboard implemented. TASK-013 admin dashboard is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-013 admin dashboard implemented. TASK-014 dashboard integration tests are next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-013 - Build the admin dashboard (not started)**
+**TASK-014 - Add dashboard integration tests (not started)**
 
 ### Current task objective
 
-Build the admin dashboard in TASK-013. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Complete dashboard integration coverage in TASK-014, including own-profile isolation. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-012 complete. TASK-013 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-013 complete. TASK-014 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-013 - Build admin dashboard.
-2. TASK-014 - Add dashboard integration tests.
+1. TASK-014 - Add dashboard integration tests.
+2. TASK-015 - Create restaurant domain entities.
 
 ## 6. Known Decisions
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-013: Build the admin dashboard.
+We are starting TASK-014: Add dashboard integration tests.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -426,3 +426,12 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Authenticated visual browser check was not performed: automatic approval review rejected temporarily granting Manager to a disposable UI account because that privilege change was not specifically authorized. No grant was executed or bypassed. Removed the newly registered unprivileged manager-ui-20261027@example.test account. Manager rendering/access was verified through existing isolated HTTP test fixtures instead; manual manager visual QA remains outstanding.
 - Hosted CI and Desktop MY_PROJECT hash verification follow. Next: TASK-013 admin dashboard. Normal Web host remains running at http://127.0.0.1:5015/ .
 - TASK-012 hosted CI passed every step: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40412106027 . Feature commit fb62ae7 is published on main. Desktop MY_PROJECT refreshed and all 136 portable files matched SHA-256 hashes; final memory copied after this entry. Existing action runtime notices remain non-blocking CI maintenance.
+
+### 2026-10-27 - TASK-013 admin dashboard
+
+- Replaced /admin authorization shell with an AdminAccess-protected dashboard: pending restaurant count placeholder, restaurant/user management links, account and sign-out actions. Styling uses existing tokens with a responsive card grid.
+- Added protected /admin/restaurants and /admin/users coming-soon destinations. No user data, role controls, restaurant approvals or mutations are exposed. Count remains explicitly unavailable rather than a fabricated zero. Actual approvals/user administration remain TASK-033/034.
+- No dependency, schema or migration changes. Extended the HTTP matrix with 8 cases covering both placeholder routes for all three roles and anonymous requests; existing /admin test now verifies dashboard content and links.
+- Formatting passed; Release build passed with zero warnings/errors; all 108 tests passed (1 Domain, 38 Application, 69 HTTP/database), zero failures/skips. Browser confirmed anonymous /admin redirects to /login with the local return URL.
+- Authenticated admin visual QA was not performed; authenticated rendering and access are covered by isolated test fixtures. No development-user privileges changed and no privilege-grant attempt was made. Browser E2E automation remains TASK-045.
+- Hosted CI and Desktop MY_PROJECT sync/hash verification follow. Next: TASK-014 dashboard integration tests. Normal Web host remains running at http://127.0.0.1:5015/ .

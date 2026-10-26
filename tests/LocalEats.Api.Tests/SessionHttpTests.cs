@@ -230,6 +230,12 @@ public sealed class SessionHttpTests : IAsyncLifetime
     [InlineData(ApplicationRoles.Admin, "/manager/menu", false)]
     [InlineData(ApplicationRoles.Admin, "/manager/orders", false)]
     [InlineData(ApplicationRoles.Customer, "/admin", false)]
+    [InlineData(ApplicationRoles.Customer, "/admin/restaurants", false)]
+    [InlineData(ApplicationRoles.Customer, "/admin/users", false)]
+    [InlineData(ApplicationRoles.Manager, "/admin/restaurants", false)]
+    [InlineData(ApplicationRoles.Manager, "/admin/users", false)]
+    [InlineData(ApplicationRoles.Admin, "/admin/restaurants", true)]
+    [InlineData(ApplicationRoles.Admin, "/admin/users", true)]
     [InlineData(ApplicationRoles.Manager, "/session/customer", false)]
     [InlineData(ApplicationRoles.Manager, "/manager", true)]
     [InlineData(ApplicationRoles.Manager, "/admin", false)]
@@ -254,7 +260,23 @@ public sealed class SessionHttpTests : IAsyncLifetime
         {
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var html = await response.Content.ReadAsStringAsync();
-            if (path == "/manager")
+            if (path == "/admin")
+            {
+                Assert.Contains("Admin dashboard", html);
+                Assert.Contains("Count not available yet", html);
+                Assert.Contains("href=\"/admin/restaurants\"", html);
+                Assert.Contains("href=\"/admin/users\"", html);
+                Assert.Contains("href=\"/account\"", html);
+                Assert.Contains("href=\"/logout\"", html);
+            }
+            else if (path.StartsWith("/admin/", StringComparison.Ordinal))
+            {
+                Assert.Contains("These tools are not available yet.", html);
+                Assert.Contains("href=\"/admin\"", html);
+                var heading = path == "/admin/users" ? "User management is coming soon" : "Restaurant management is coming soon";
+                Assert.Contains($"<h1>{heading}</h1>", html);
+            }
+            else if (path == "/manager")
             {
                 Assert.Contains("Manager dashboard", html);
                 Assert.Contains("Assignment integration coming soon", html);
@@ -292,6 +314,8 @@ public sealed class SessionHttpTests : IAsyncLifetime
     [InlineData("/manager/menu")]
     [InlineData("/manager/orders")]
     [InlineData("/admin")]
+    [InlineData("/admin/restaurants")]
+    [InlineData("/admin/users")]
     public async Task RolePages_Anonymous_RedirectsToLogin(string path)
     {
         using var client = Client();

@@ -236,10 +236,10 @@ Acceptance criteria:
 
 ## TASK-013: Build the admin dashboard
 
-- [ ] Create `/admin`.
-- [ ] Show pending restaurant count placeholder.
-- [ ] Show user and restaurant management links.
-- [ ] Restrict the page to Admin users.
+- [x] Create `/admin`.
+- [x] Show pending restaurant count placeholder.
+- [x] Show user and restaurant management links.
+- [x] Restrict the page to Admin users.
 
 ## TASK-014: Add dashboard integration tests
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 3 - Customer Dashboard
-- Current task: TASK-013
-- Branch: `codex/task-012-manager-dashboard`
+- Current task: TASK-014
+- Branch: `codex/task-013-admin-dashboard`
 - Status: [ ] Not started
-- Last completed task: TASK-012 - Build the manager dashboard
-- Next task: TASK-013 - Build the admin dashboard
+- Last completed task: TASK-013 - Build the admin dashboard
+- Next task: TASK-014 - Add dashboard integration tests
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-013 - Build the admin dashboard
+TASK-014 - Add dashboard integration tests
 ```
 
 
@@ -213,3 +213,7 @@ Customers land at /dashboard after default login. It shows a welcome, account ac
 ## Manager dashboard (TASK-012)
 
 Manager-role users can open /manager. Restaurant setup, menu and orders links lead to protected coming-soon pages. Assignment status and pending counts are not connected yet; real restaurant ownership remains TASK-025. No default Manager account or public role-grant endpoint exists.
+
+## Admin dashboard (TASK-013)
+
+Admin-role users can open /admin with links to protected restaurant/user management placeholders. Pending restaurant counts are not connected. Actual approval and user administration remain TASK-033/034; no default Admin account, role-grant endpoint or management mutation is introduced.

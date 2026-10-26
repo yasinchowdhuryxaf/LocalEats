@@ -48,6 +48,34 @@ public sealed class SessionHttpTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Shell_Anonymous_ShowsAccessiblePublicNavigation()
+    {
+        using var client = Client();
+        var html = await client.GetStringAsync("/");
+        Assert.Contains("Skip to content", html);
+        Assert.Contains("id=\"main-content\"", html);
+        Assert.Contains("aria-label=\"Mobile navigation\"", html);
+        Assert.Contains("href=\"/login\"", html);
+        Assert.DoesNotContain("href=\"/manager\"", html);
+        Assert.DoesNotContain("href=\"/admin\"", html);
+        Assert.Contains("Basket (coming soon)", html);
+    }
+
+    [Fact]
+    public async Task Shell_Customer_ShowsOwnAreaAndAccountLinks()
+    {
+        using var client = Client();
+        await Login(client, email, Password, "/");
+        var html = await client.GetStringAsync("/");
+        Assert.Contains("href=\"/session/customer\"", html);
+        Assert.Contains("href=\"/account\"", html);
+        Assert.Contains("href=\"/logout\"", html);
+        Assert.DoesNotContain("href=\"/manager\"", html);
+        Assert.DoesNotContain("href=\"/admin\"", html);
+        Assert.DoesNotContain("href=\"/login\"", html);
+    }
+
+    [Fact]
     public async Task ProtectedPage_Anonymous_RedirectsToLogin()
     {
         using var client = Client();

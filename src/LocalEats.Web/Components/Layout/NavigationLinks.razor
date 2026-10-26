@@ -1,0 +1,31 @@
+@using LocalEats.Application.Security
+
+<a href="/">Home</a>
+@if (HttpContext?.User.Identity?.IsAuthenticated == true)
+{
+    @if (HttpContext.User.IsInRole(RoleNames.Customer))
+    {
+        <a href="/session/customer">Customer area</a>
+    }
+    @if (HttpContext.User.IsInRole(RoleNames.Manager))
+    {
+        <a href="/manager">Manager area</a>
+    }
+    @if (HttpContext.User.IsInRole(RoleNames.Admin))
+    {
+        <a href="/admin">Admin area</a>
+    }
+    <a href="/account">My account</a>
+    <a href="/logout">Sign out</a>
+}
+else
+{
+    <a href="/login">Sign in</a>
+    <a href="/register">Create account</a>
+}
+<button type="button" disabled title="Basket will be available in a later task">Basket (coming soon)</button>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+}

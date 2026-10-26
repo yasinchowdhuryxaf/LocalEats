@@ -5,7 +5,7 @@
 @inject ProfileService Profiles
 
 <PageTitle>Your account | LocalEats</PageTitle>
-<main class="auth-page">
+<section class="auth-page">
     <a href="/session">Your session</a>
     <h1>Your account</h1>
     @if (profile is null)
@@ -45,7 +45,7 @@
         </EditForm>
     }
     <p><a href="/logout">Sign out</a></p>
-</main>
+</section>
 
 @code {
     [SupplyParameterFromForm]

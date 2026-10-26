@@ -6,7 +6,7 @@
 
 <PageTitle>Create an account | LocalEats</PageTitle>
 
-<main class="registration">
+<section class="registration">
     <a href="/" class="brand">LocalEats</a>
     <h1>Create your account</h1>
     <p>Start with a customer account.</p>
@@ -43,7 +43,7 @@
             <p role="status" aria-live="polite">@(submitting ? "Creating your account. Please wait." : string.Empty)</p>
         </EditForm>
     }
-</main>
+</section>
 
 @code {
     private readonly RegistrationRequest model = new();

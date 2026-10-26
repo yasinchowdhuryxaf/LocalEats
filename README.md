@@ -4,7 +4,7 @@ LocalEats is a C# food-ordering platform built with Blazor, ASP.NET Core, and Po
 
 ## Current status
 
-TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is implemented at `/register`. Login/logout is implemented at /login and /logout; role policies and central order ownership checks are implemented in TASK-008. The account page is implemented at /account. TASK-010 creates the shared application shell. Basic persistence entities exist; restaurant and ordering features are still pending.
+TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is implemented at `/register`. Login/logout is implemented at /login and /logout; role policies and central order ownership checks are implemented in TASK-008. The account page is implemented at /account. TASK-010 adds the responsive shared application shell. Basic persistence entities exist; restaurant and ordering features are still pending.
 
 ## Technology
 
@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-010 - Create the application shell
+TASK-011 - Build the customer dashboard
 ```
 
 

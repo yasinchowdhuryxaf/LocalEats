@@ -202,10 +202,10 @@ Goal: give a signed-in customer a useful starting point before implementing orde
 
 ## TASK-010: Create the application shell
 
-- [ ] Build the header, navigation, basket link placeholder, and account menu.
-- [ ] Add responsive mobile navigation.
-- [ ] Add consistent page container and footer.
-- [ ] Apply `DESIGN.md` color, typography, and spacing tokens.
+- [x] Build the header, navigation, basket link placeholder, and account menu.
+- [x] Add responsive mobile navigation.
+- [x] Add consistent page container and footer.
+- [x] Apply `DESIGN.md` color, typography, and spacing tokens.
 
 Acceptance criteria:
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 3 - Customer Dashboard
-- Current task: TASK-010
-- Branch: `codex/task-009-account`
+- Current task: TASK-011
+- Branch: `codex/task-010-shell`
 - Status: [ ] Not started
-- Last completed task: TASK-009 - Add account page
-- Next task: TASK-010 - Create the application shell
+- Last completed task: TASK-010 - Create the application shell
+- Next task: TASK-011 - Build the customer dashboard
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

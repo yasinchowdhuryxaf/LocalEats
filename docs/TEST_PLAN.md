@@ -49,3 +49,5 @@ The HTTP suite tests the full 3×3 signed-role/entry-page matrix plus anonymous 
 ## Account/profile checks (TASK-009)
 
 Application tests check normalization, optional fields, limits, phone syntax and authenticated caller ID. HTTP/PostgreSQL tests verify saved profiles across requests, rejected invalid input, identity-bound access despite overposted IDs/email, stale-version conflicts, antiforgery, safe deleted-user errors, HTML encoding and phone verification reset. Test fixtures clean only their generated users. The additive display-name migration is exercised by test DB initialization.
+
+TASK-010: HTTP tests verify public/Customer shell navigation and absence of privileged links. Manual browser checks at 375/768/1440 verify no horizontal overflow, native menu Enter operation and visible keyboard focus. Route permission tests continue to enforce authorization independently of navigation.

@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-009 account/profile editing implemented. TASK-010 application shell is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-010 application shell implemented. TASK-011 customer dashboard is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-010 - Create the application shell (not started)**
+**TASK-011 - Build the customer dashboard (not started)**
 
 ### Current task objective
 
-Build the shared responsive application shell in TASK-010. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Build the customer dashboard in TASK-011. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-009 complete. TASK-010 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-010 complete. TASK-011 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-010 - Create the application shell.
-2. TASK-011 - Build customer dashboard.
+1. TASK-011 - Build customer dashboard.
+2. TASK-012 - Follow the next dashboard task in TASKS.md.
 
 ## 6. Known Decisions
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-010: Create the application shell.
+We are starting TASK-011: Build the customer dashboard.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -394,3 +394,12 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 
 - TASK-009 hosted CI passed all steps, including migration and profile security/concurrency tests: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40409142236 . Feature commit 0528548 is published on main.
 - Desktop MY_PROJECT refreshed; all 130 portable files matched SHA-256 hashes. The final memory record is copied after this entry. Normal local development Web host is running at http://127.0.0.1:5015/account (sign-in required). No real user credentials or privileged roles were changed; the display-name migration preserves existing user records.
+
+### 2026-10-27 - TASK-010 application shell
+
+- Added shared header, role-aware navigation/account actions, native keyboard-operated mobile menu, footer, skip link and one main content landmark. Existing page sections now sit inside the shared main landmark.
+- Centralized DESIGN.md color/spacing tokens and responsive page widths; replaced the starter homepage with an honest project introduction. Basket is a disabled coming-soon placeholder, with no fake order functionality.
+- Preserved static SSR cookie forms and existing server authorization. No dependencies, schema changes or migrations required.
+- Added anonymous and Customer HTTP navigation tests. Formatting passed; Release build passed with zero warnings/errors; all 80 tests passed (1 Domain, 38 Application, 41 HTTP/database), zero failures/skips. E2E automation remains TASK-045.
+- Browser checked widths 375, 768 and 1440: no horizontal overflow; menu Enter toggles correctly and keyboard focus outline is visible. One main landmark confirmed.
+- Hosted CI and portable source hash verification follow. Next: TASK-011 customer dashboard. No restaurant ordering features implemented in this task.

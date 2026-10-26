@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LocalEats.Api/LocalEats.Api.csproj" />
+    <Project Path="src/LocalEats.Application/LocalEats.Application.csproj" />
+    <Project Path="src/LocalEats.Contracts/LocalEats.Contracts.csproj" />
+    <Project Path="src/LocalEats.Domain/LocalEats.Domain.csproj" />
+    <Project Path="src/LocalEats.Infrastructure/LocalEats.Infrastructure.csproj" />
+    <Project Path="src/LocalEats.Web/LocalEats.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LocalEats.Api.Tests/LocalEats.Api.Tests.csproj" />
+    <Project Path="tests/LocalEats.Application.Tests/LocalEats.Application.Tests.csproj" />
+    <Project Path="tests/LocalEats.Domain.Tests/LocalEats.Domain.Tests.csproj" />
+    <Project Path="tests/LocalEats.E2E.Tests/LocalEats.E2E.Tests.csproj" />
+  </Folder>
+</Solution>

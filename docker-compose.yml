@@ -1,0 +1,24 @@
+# LocalEats local development services
+name: localeats
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: localeats-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: localeats
+      POSTGRES_USER: localeats
+      POSTGRES_PASSWORD: localeats_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - localeats-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U localeats -d localeats"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  localeats-postgres-data:

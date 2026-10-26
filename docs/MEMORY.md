@@ -100,7 +100,7 @@ These documents should be copied into the repository under `docs/` where appropr
 - [x] Initialized Git and added a .NET-oriented `.gitignore`.
 - [x] Added `global.json` for the installed .NET SDK.
 - [x] InitialDatabaseFoundation migration created and applied on 2026-10-21; recheck pending after Docker starts.
-- [ ] No authentication code has been implemented yet.
+- [x] Identity persistence, middleware, development roles and migration implemented; registration/login UI remain upcoming.
 - [ ] No UI pages have been implemented yet.
 - [ ] No CI pipeline has been implemented yet.
 
@@ -116,38 +116,19 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task objective
 
-Configure the database foundation:
-
-```text
-EF Core, Npgsql, `LocalEatsDbContext`, database health checking, migrations, and development seed infrastructure.
-```
-
-The local development workflow is complete; TASK-003 now adds PostgreSQL persistence.
-
-### Expected result
-
-- The application can connect to PostgreSQL.
-- Migrations run successfully.
-- No database tables are created manually.
+Build registration in TASK-006 using the Identity managers configured in TASK-005. No registration page has been implemented yet.
 
 ### Current status
 
-TASK-001 through TASK-004 implemented and locally verified. TASK-005 Identity is next. Hosted CI remains pending a GitHub remote.
+TASK-001 through TASK-005 complete. TASK-006 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-Work in this order:
-
-1. TASK-003 - Configure database foundation.
-2. TASK-004 - Configure quality checks.
-3. TASK-005 - Add application user and Identity.
-4. TASK-006 - Build registration.
-5. TASK-007 - Build login and logout.
-6. TASK-008 - Add role and policy authorization.
-7. TASK-009 - Add account page.
-8. TASK-010 - Create the application shell.
-
-Do not begin payment gateway work before the customer ordering flow, manager order processing, authorization, and tests are working.
+1. TASK-006 - Build registration.
+2. TASK-007 - Build login and logout.
+3. TASK-008 - Add role and resource authorization.
+4. TASK-009 - Add account page.
+5. TASK-010 - Create the application shell.
 
 ## 6. Known Decisions
 
@@ -191,7 +172,7 @@ Do not silently guess a business policy when one of these decisions affects data
 - Documentation is present under docs/.
 - Local PostgreSQL migration, seed data and health endpoints verified on 2026-10-27.
 - No test database setup exists yet.
-- No seeded development user accounts exist yet.
+- No preset development user accounts are created; development roles exist.
 - No design tokens have been implemented in CSS or Blazor components.
 - No hosting provider has been selected.
 - No payment provider has been selected.
@@ -358,4 +339,6 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - API and Web health endpoints returned HTTP 200 Healthy. Formatting passed. Final Release build passed with zero warnings/errors; all 6 tests passed, zero failures/skips.
 - ADR docs/decisions/0001-identity-persistence.md explains why Identity-dependent ApplicationUser belongs in Infrastructure, replacing the earlier Domain example.
 - Registration, login/logout, role policy enforcement and account UI remain TASK-006 onward. No sign-in UI or feature E2E coverage is claimed.
-- Portable copy sync: refreshing after local verification; final hash result follows. Next task is TASK-006 registration.
+- Portable copy sync: completed 2026-10-27; all 83 portable files matched SHA-256 hashes. Next task is TASK-006 registration.
+
+- TASK-005 hosted CI verified: run 40400739493 passed all steps on GitHub Linux: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40400739493 . Commit b5db5e7 is published on main. Portable copy contains the verified Identity implementation and updated memory.

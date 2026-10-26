@@ -99,16 +99,16 @@ These documents should be copied into the repository under `docs/` where appropr
 - [x] Added project references following the architecture.
 - [x] Initialized Git and added a .NET-oriented `.gitignore`.
 - [x] Added `global.json` for the installed .NET SDK.
-- [x] InitialDatabaseFoundation migration created and applied on 2026-10-21; recheck pending after Docker starts.
-- [x] Identity persistence, middleware, development roles and migration implemented; registration/login UI remain upcoming.
-- [ ] No UI pages have been implemented yet.
-- [ ] No CI pipeline has been implemented yet.
+- [x] InitialDatabaseFoundation and AddIdentity migrations applied and verified in local PostgreSQL.
+- [x] Identity persistence, middleware, development roles and registration implemented; login/logout UI is next.
+- [x] Registration page implemented at /register with browser-verified success and error states.
+- [x] GitHub Actions pipeline connected; includes a separate PostgreSQL service for registration tests.
 
 ## 4. In Progress
 
 ### Current phase
 
-**Phase 1 - Project Setup**
+**Phase 2 - Authentication**
 
 ### Current task
 
@@ -116,19 +116,18 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task objective
 
-Build registration in TASK-006 using the Identity managers configured in TASK-005. No registration page has been implemented yet.
+Build login/logout in TASK-007 using Identity. Registration is complete; no login page or sign-in flow has been implemented yet.
 
 ### Current status
 
-TASK-001 through TASK-005 complete. TASK-006 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-006 complete. TASK-007 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-006 - Build registration.
-2. TASK-007 - Build login and logout.
-3. TASK-008 - Add role and resource authorization.
-4. TASK-009 - Add account page.
-5. TASK-010 - Create the application shell.
+1. TASK-007 - Build login and logout.
+2. TASK-008 - Add role and resource authorization.
+3. TASK-009 - Add account page.
+4. TASK-010 - Create the application shell.
 
 ## 6. Known Decisions
 
@@ -351,5 +350,7 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Added 6 Application validation tests and 4 real PostgreSQL persistence tests for valid hashing/Customer-only roles, case-insensitive duplicates, weak passwords, and concurrent duplicate requests. CI now uses an ephemeral PostgreSQL service. The local test DB is localeats_registration_tests; tests reject non-_tests databases and clean only their own test users.
 - Browser verified mismatch errors, successful account creation, and duplicate-safe failure. Browser verification caught and fixed input-binding behavior. Removed the single disposable browser test account afterward. Proof image: outputs/registration-success.png (not included in portable source).
 - No schema change/new migration or new runtime dependency was required. The E2E test project is still a placeholder for TASK-045.
-- Final formatting passed; Release build passed with zero warnings/errors; all 16 tests passed, zero failures/skips. Hosted CI and portable copy verification follow.
+- Final formatting passed; Release build passed with zero warnings/errors; all 16 tests passed, zero failures/skips. Desktop MY_PROJECT refreshed; all 93 portable files matched SHA-256 hashes. Hosted CI result follows.
 - Next: TASK-007 login/logout. Current branch: codex/task-006-registration.
+
+- TASK-006 hosted CI passed all steps with ephemeral PostgreSQL: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40402522924 . Feature commit e671cb4 is published on main. Formatting, Release build and all 16 tests pass both locally and in GitHub. Portable source sync verified for all 93 files; the final memory record is copied after this entry.

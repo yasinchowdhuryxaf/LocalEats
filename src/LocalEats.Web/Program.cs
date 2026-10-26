@@ -1,4 +1,5 @@
 using LocalEats.Application.Users;
+using LocalEats.Application.Users.Profile;
 using LocalEats.Infrastructure;
 using LocalEats.Infrastructure.Persistence.Seed;
 using LocalEats.Web.Components;
@@ -11,6 +12,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<LoginService>();
+builder.Services.AddScoped<ProfileService>();
 if (!builder.Environment.IsDevelopment())
 {
     builder.Services.ConfigureApplicationCookie(options =>

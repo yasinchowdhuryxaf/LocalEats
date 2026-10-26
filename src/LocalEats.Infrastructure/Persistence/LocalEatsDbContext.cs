@@ -24,6 +24,7 @@ public sealed class LocalEatsDbContext(DbContextOptions<LocalEatsDbContext> opti
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<ApplicationUser>().Property(user => user.DisplayName).HasMaxLength(100);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LocalEatsDbContext).Assembly);
     }
 }

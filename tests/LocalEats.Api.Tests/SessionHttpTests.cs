@@ -21,6 +21,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private readonly string email = $"session-{Guid.NewGuid():N}@example.test";
     private const string Password = "Session-Test-Password123!";
     private Guid? testRestaurantId;
+    private Guid? extraUserId;
 
     public async Task InitializeAsync()
     {
@@ -248,6 +249,177 @@ public sealed class SessionHttpTests : IAsyncLifetime
         Assert.False(await authorization.CanReadOrderAsync(new ClaimsPrincipal(), ownOrder.Id));
     }
 
+    [Fact]
+    public async Task Account_Anonymous_RedirectsToLogin()
+    {
+        using var client = Client();
+        var response = await client.GetAsync("/account");
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("/login?ReturnUrl=", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task Account_SaveProfile_PersistsAndKeepsSessionWithoutVerifyingPhone()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/account");
+        fields["Input.DisplayName"] = "Test Account";
+        fields["Input.PhoneNumber"] = "+8801712345678";
+        fields["Input.PhoneNumberConfirmed"] = "true";
+        var response = await client.PostAsync("/account", new FormUrlEncodedContent(fields));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var page = await client.GetStringAsync(response.Headers.Location);
+        Assert.Contains("Your profile was saved.", page);
+        Assert.Contains("Test Account", page);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/session")).StatusCode);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var user = await scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>().FindByEmailAsync(email);
+        Assert.NotNull(user);
+        Assert.Equal("Test Account", user.DisplayName);
+        Assert.Equal("+8801712345678", user.PhoneNumber);
+        Assert.False(user.PhoneNumberConfirmed);
+        Assert.Equal(email, user.UserName);
+    }
+
+    [Fact]
+    public async Task Account_InvalidPhone_DoesNotPersistAnyProfileChanges()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/account");
+        fields["Input.DisplayName"] = "Should not save";
+        fields["Input.PhoneNumber"] = "not-a-phone";
+        var response = await client.PostAsync("/account", new FormUrlEncodedContent(fields));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("Enter a valid phone number", await response.Content.ReadAsStringAsync());
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var user = await scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>().FindByEmailAsync(email);
+        Assert.NotNull(user);
+        Assert.Equal(string.Empty, user.DisplayName);
+        Assert.Null(user.PhoneNumber);
+    }
+
+    [Fact]
+    public async Task Account_ChangedUserIdAndEmail_UpdateOnlySignedInProfile()
+    {
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var otherEmail = $"other-{Guid.NewGuid():N}@example.test";
+            var other = new ApplicationUser { UserName = otherEmail, Email = otherEmail, DisplayName = "Other user" };
+            Assert.True((await users.CreateAsync(other, Password)).Succeeded);
+            extraUserId = other.Id;
+        }
+
+        using var client = Client();
+        await Login(client, email, Password);
+        var path = $"/account?userId={extraUserId}";
+        var fields = await FormFields(client, path);
+        fields["Input.UserId"] = extraUserId.ToString() ?? string.Empty;
+        fields["Input.Email"] = "changed@example.test";
+        fields["Input.DisplayName"] = "My name";
+        fields["Input.PhoneNumber"] = string.Empty;
+        var response = await client.PostAsync(path, new FormUrlEncodedContent(fields));
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        await using var verify = Factory.Services.CreateAsyncScope();
+        var manager = verify.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var current = await manager.FindByEmailAsync(email);
+        Assert.NotNull(current);
+        Assert.Equal("My name", current.DisplayName);
+        Assert.Equal(email, current.Email);
+        var otherUser = await manager.FindByIdAsync(extraUserId.ToString() ?? string.Empty);
+        Assert.NotNull(otherUser);
+        Assert.Equal("Other user", otherUser.DisplayName);
+    }
+
+    [Fact]
+    public async Task Account_StaleForm_DoesNotOverwriteNewerProfile()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var first = await FormFields(client, "/account");
+        var stale = await FormFields(client, "/account");
+        first["Input.DisplayName"] = "First edit";
+        Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync("/account", new FormUrlEncodedContent(first))).StatusCode);
+        stale["Input.DisplayName"] = "Stale edit";
+        var response = await client.PostAsync("/account", new FormUrlEncodedContent(stale));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("changed in another session", await response.Content.ReadAsStringAsync());
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var user = await scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>().FindByEmailAsync(email);
+        Assert.NotNull(user);
+        Assert.Equal("First edit", user.DisplayName);
+    }
+
+    [Fact]
+    public async Task Account_PostWithoutAntiforgeryToken_IsRejected()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var response = await client.PostAsync("/account", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["_handler"] = "profile",
+            ["Input.DisplayName"] = "Unprotected change"
+        }));
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Account_DeletedUser_ShowsSafeLoadError()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Users
+                .Where(user => user.Email == email).ExecuteDeleteAsync();
+        }
+
+        var response = await client.GetAsync("/account");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("We couldn't load your profile", WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync()));
+    }
+
+    [Fact]
+    public async Task Account_ChangedPreviouslyVerifiedPhone_RequiresVerificationAgain()
+    {
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await users.FindByEmailAsync(email);
+            Assert.NotNull(user);
+            user.PhoneNumber = "+8801712345678";
+            user.PhoneNumberConfirmed = true;
+            Assert.True((await users.UpdateAsync(user)).Succeeded);
+        }
+
+        using var client = Client();
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/account");
+        fields["Input.DisplayName"] = "Changed phone";
+        fields["Input.PhoneNumber"] = "+8801812345678";
+        Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync("/account", new FormUrlEncodedContent(fields))).StatusCode);
+        await using var verify = Factory.Services.CreateAsyncScope();
+        var current = await verify.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>().FindByEmailAsync(email);
+        Assert.NotNull(current);
+        Assert.False(current.PhoneNumberConfirmed);
+        Assert.Equal("+8801812345678", current.PhoneNumber);
+    }
+
+    [Fact]
+    public async Task Account_HtmlInName_RendersAsText()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/account");
+        fields["Input.DisplayName"] = "<script>alert(1)</script>";
+        Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync("/account", new FormUrlEncodedContent(fields))).StatusCode);
+        var html = await client.GetStringAsync("/account");
+        Assert.Contains("&lt;script&gt;", html);
+        Assert.DoesNotContain("<script>alert(1)</script>", html);
+    }
+
     private WebApplicationFactory<WebEntryPoint> Factory => factory ?? throw new InvalidOperationException("Not initialized.");
 
     private HttpClient Client() => Factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -295,6 +467,11 @@ public sealed class SessionHttpTests : IAsyncLifetime
         {
             await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Users
                 .Where(user => user.Email == email).ExecuteDeleteAsync();
+            if (extraUserId is Guid otherUserId)
+            {
+                await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Users
+                    .Where(user => user.Id == otherUserId).ExecuteDeleteAsync();
+            }
             if (testRestaurantId is Guid restaurantId)
             {
                 var database = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();

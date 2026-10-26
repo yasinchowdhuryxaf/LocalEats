@@ -45,3 +45,7 @@ The API test project references the Web host and Microsoft.AspNetCore.Mvc.Testin
 ## Role and ownership checks (TASK-008)
 
 The HTTP suite tests the full 3×3 signed-role/entry-page matrix plus anonymous access to each role page. Application security tests reject untrusted/malformed principals, unknown roles, other-customer orders and missing records. The PostgreSQL isolation test creates two orders with different owners, checks access using Identity-generated claims, and verifies explicit Admin access. It removes only its own restaurant/orders and user during cleanup. These tests do not claim a complete manager assignment or dashboard/order-view feature.
+
+## Account/profile checks (TASK-009)
+
+Application tests check normalization, optional fields, limits, phone syntax and authenticated caller ID. HTTP/PostgreSQL tests verify saved profiles across requests, rejected invalid input, identity-bound access despite overposted IDs/email, stale-version conflicts, antiforgery, safe deleted-user errors, HTML encoding and phone verification reset. Test fixtures clean only their generated users. The additive display-name migration is exercised by test DB initialization.

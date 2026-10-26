@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-008 role/ownership authorization implemented. TASK-009 account page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-009 account/profile editing implemented. TASK-010 application shell is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-009 - Add account page (not started)**
+**TASK-010 - Create the application shell (not started)**
 
 ### Current task objective
 
-Add the signed-in account page with server-validated profile editing in TASK-009. Role policies and the central order-ownership service are implemented.
+Build the shared responsive application shell in TASK-010. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-008 complete. TASK-009 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-009 complete. TASK-010 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-009 - Add account page.
-2. TASK-010 - Create the application shell.
+1. TASK-010 - Create the application shell.
+2. TASK-011 - Build customer dashboard.
 
 ## 6. Known Decisions
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-009: Add account page.
+We are starting TASK-010: Create the application shell.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -380,3 +380,14 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 
 - TASK-008 hosted CI passed every step, including the role matrix and PostgreSQL order ownership isolation tests: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40407175133 . Feature commit 6332327 is published on main.
 - Desktop MY_PROJECT refreshed; all 119 portable files matched SHA-256 hashes. Final memory copied after this entry. The normal local development Web host is running at http://127.0.0.1:5015/login . No production data or real user privileges were changed; test fixtures cleaned their own disposable records.
+
+### 2026-10-27 - TASK-009 account/profile page
+
+- Added protected static server-rendered /account with readonly email, editable optional display name and contact phone, validation, saved confirmation, stale-form conflict message and safe load/update error states. Session page links to account.
+- Application ProfileService obtains user ID only from authenticated Identity claims, validates/normalizes profile fields, and delegates persistence. No target user ID, email, role or phone-confirmation flag is accepted from form data.
+- Infrastructure uses UserManager in an atomic transaction, checks ConcurrencyStamp to reject stale edits and uses Identity SetPhoneNumberAsync so changed phone numbers are unverified. RefreshSignInAsync preserves this browser's session after the security-stamp rotation.
+- AddDisplayNameToUsers migration adds a non-null varchar(100) DisplayName with empty-string default; applied to local PostgreSQL and tested in the isolated test DB. Existing users remain intact. No new dependency was introduced.
+- Proposed defaults for this light profile task: name optional up to 100 characters; phone optional up to 32 characters with standard country-agnostic phone syntax checks. No SMS verification, country-specific requirement, email/username editing, password change or account deletion is implemented.
+- Added 10 Application cases and 9 real HTTP/PostgreSQL account cases: own-only changes despite tampered IDs/email, optional/invalid fields, stale form rejection, antiforgery, deleted-user load error, HTML encoding and clearing previous phone verification.
+- Formatting passed; Release build passed with zero warnings/errors; all 78 tests passed (1 Domain, 38 Application, 39 API/HTTP/database), no failures/skips. E2E automation remains TASK-045; these account UI handlers are exercised through the HTTP test host.
+- Hosted CI and Desktop MY_PROJECT refresh/hash verification follow local verification. Next task: TASK-010 application shell. Branch: codex/task-009-account.

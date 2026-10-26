@@ -102,7 +102,7 @@ Acceptance criteria:
 
 ## TASK-004: Configure quality checks
 
-Status: [x] Implemented and locally verified; first hosted GitHub run pending a repository remote.
+Status: [x] Complete — local checks and hosted GitHub CI verified; see MEMORY.md.
 
 - [x] Add formatting and analyzer settings.
 - [x] Add a GitHub Actions workflow for restore, build, format, and tests.
@@ -188,11 +188,13 @@ Acceptance criteria:
 
 ## TASK-009: Add account page
 
-- [ ] Create `/account`.
-- [ ] Display the authenticated user’s basic profile.
-- [ ] Add profile name and phone editing.
-- [ ] Validate profile changes on the server.
-- [ ] Add a safe account error state.
+Status: [x] Complete — verification recorded in MEMORY.md.
+
+- [x] Create `/account`.
+- [x] Display the authenticated user’s basic profile.
+- [x] Add profile name and phone editing.
+- [x] Validate profile changes on the server.
+- [x] Add a safe account error state.
 
 # Phase 3: Customer Dashboard
 
@@ -668,17 +670,17 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 ## Milestone 1: Foundation complete
 
-- [ ] Solution builds.
-- [ ] Database connects.
-- [ ] Health check works.
-- [ ] CI is green.
+- [x] Solution builds.
+- [x] Database connects.
+- [x] Health check works.
+- [x] CI is green.
 
 ## Milestone 2: Authentication complete
 
-- [ ] Customer registration works.
-- [ ] Login/logout works.
-- [ ] Protected routes work.
-- [ ] Role policies work.
+- [x] Customer registration works.
+- [x] Login/logout works.
+- [x] Protected routes work.
+- [x] Role policies work.
 
 ## Milestone 3: First useful customer experience
 
@@ -704,12 +706,12 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 ## Current Work
 
-- Current phase: Phase 2 - Authentication
-- Current task: TASK-009
-- Branch: `codex/task-008-authorization`
+- Current phase: Phase 3 - Customer Dashboard
+- Current task: TASK-010
+- Branch: `codex/task-009-account`
 - Status: [ ] Not started
-- Last completed task: TASK-008 - Add role and policy authorization
-- Next task: TASK-009 - Add account page
+- Last completed task: TASK-009 - Add account page
+- Next task: TASK-010 - Create the application shell
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

@@ -7,6 +7,7 @@
 <main class="auth-page">
     <h1>You are signed in</h1>
     <p>Your LocalEats session is active.</p>
+    <p><a href="/account">Your account</a></p>
     @if (HttpContext?.User.IsInRole(RoleNames.Customer) == true)
     {
         <p><a href="/session/customer">Customer area</a></p>

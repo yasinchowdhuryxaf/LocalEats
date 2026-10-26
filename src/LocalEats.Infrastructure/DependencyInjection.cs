@@ -1,5 +1,6 @@
 using LocalEats.Application.Security;
 using LocalEats.Application.Users;
+using LocalEats.Application.Users.Profile;
 using LocalEats.Infrastructure.Identity;
 using LocalEats.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -54,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<IRegistrationStore, IdentityRegistrationStore>();
         services.AddScoped<ISessionStore, IdentitySessionStore>();
+        services.AddScoped<IProfileStore, IdentityProfileStore>();
 
         services.AddHealthChecks()
             .AddCheck<Persistence.PostgresHealthCheck>("postgresql");

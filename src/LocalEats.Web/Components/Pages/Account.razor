@@ -1,0 +1,96 @@
+@page "/account"
+@using LocalEats.Application.Users.Profile
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ProfileService Profiles
+
+<PageTitle>Your account | LocalEats</PageTitle>
+<main class="auth-page">
+    <a href="/session">Your session</a>
+    <h1>Your account</h1>
+    @if (profile is null)
+    {
+        <p role="alert">We couldn't load your profile. Reload the page or sign in again.</p>
+        <a href="/account">Reload profile</a>
+    }
+    else
+    {
+        <p>Email: <strong>@profile.Email</strong></p>
+        @if (Saved)
+        {
+            <p role="status">Your profile was saved.</p>
+        }
+        @if (result is { Succeeded: false })
+        {
+            <div role="alert">
+                @foreach (var error in result.Errors.Values.SelectMany(values => values))
+                {
+                    <p>@error</p>
+                }
+                <a href="/account">Reload profile</a>
+            </div>
+        }
+        <EditForm Model="Input" OnValidSubmit="SaveAsync" FormName="profile" Enhance="false">
+            <DataAnnotationsValidator />
+            <div role="alert"><ValidationSummary /></div>
+            <input type="hidden" name="Input.Version" value="@Input.Version" />
+            <label for="profile-name">Name (optional)</label>
+            <InputText id="profile-name" @bind-Value="Input.DisplayName" maxlength="100" autocomplete="name" />
+            <ValidationMessage For="() => Input.DisplayName" />
+            <label for="profile-phone">Phone number (optional)</label>
+            <InputText id="profile-phone" type="tel" @bind-Value="Input.PhoneNumber" maxlength="32" autocomplete="tel" aria-describedby="phone-help" />
+            <p id="phone-help">Include your country code if needed. This number is not verified.</p>
+            <ValidationMessage For="() => Input.PhoneNumber" />
+            <button type="submit">Save profile</button>
+        </EditForm>
+    }
+    <p><a href="/logout">Sign out</a></p>
+</main>
+
+@code {
+    [SupplyParameterFromForm]
+    public UpdateProfileRequest Input { get; set; }
+
+    [SupplyParameterFromQuery]
+    public bool Saved { get; set; }
+
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private ProfileSnapshot? profile;
+    private ProfileUpdateResult? result;
+
+    public Account() => Input = new UpdateProfileRequest();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new UpdateProfileRequest();
+        if (HttpContext is null)
+        {
+            return;
+        }
+
+        profile = await Profiles.GetAsync(HttpContext.User);
+        if (profile is not null && !HttpMethods.IsPost(HttpContext.Request.Method))
+        {
+            Input = new UpdateProfileRequest
+            {
+                DisplayName = profile.DisplayName, PhoneNumber = profile.PhoneNumber, Version = profile.Version
+            };
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (HttpContext is null)
+        {
+            return;
+        }
+
+        result = await Profiles.UpdateAsync(HttpContext.User, Input);
+        if (result.Succeeded)
+        {
+            HttpContext.Response.Redirect("/account?saved=true");
+        }
+    }
+}

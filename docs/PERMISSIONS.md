@@ -8,6 +8,7 @@ Identity creates signed role claims at login. Both hosts register the same polic
 |---|---|---|---|---|
 | Register/login | Public | Public | Public | Public |
 | /session and logout confirmation | Login redirect | Allow | Allow | Allow |
+| /account profile read/edit | Login redirect | Own only | Own only | Own only |
 | /session/customer — CustomerAccess | Login redirect | Allow | Deny | Deny |
 | /manager — ManagerAccess | Login redirect | Deny | Allow | Deny |
 | /admin — AdminAccess | Login redirect | Deny | Deny | Allow |
@@ -28,7 +29,7 @@ ManagerRestaurant persistence is scheduled for TASK-025. Until that assignment i
 
 ## Role changes and future features
 
-This task provides no public role-grant endpoint, default admin accounts, manager assignment UI or user administration. Trusted provisioning is required. Identity cookies capture roles at sign-in; immediate role-removal/suspension revocation must be implemented with TASK-034 before administrative account changes are exposed. TASK-009 adds the account page and TASK-025 adds restaurant ownership. Do not mark those tasks complete based on these policy definitions.
+This task provides no public role-grant endpoint, default admin accounts, manager assignment UI or user administration. Trusted provisioning is required. Identity cookies capture roles at sign-in; immediate role-removal/suspension revocation must be implemented with TASK-034 before administrative account changes are exposed. TASK-009 implements own-profile editing, and TASK-025 adds restaurant ownership. Do not mark those tasks complete based on these policy definitions.
 
 ## Verification
 

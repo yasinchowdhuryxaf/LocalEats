@@ -338,3 +338,12 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Portable copy sync: completed 2026-10-27; all 76 portable source/configuration/documentation files matched SHA-256 hashes. Docker volume data is not part of the source copy; new computers recreate sample data through migrations.
 - Next task: TASK-005 Identity. Registration, login/logout and authorization remain later tasks.
 
+
+### 2026-10-27 - GitHub CI connected and verified
+
+- Verified private repository https://github.com/yasinchowdhuryxaf/LocalEats belongs to the authenticated user.
+- Preserved remote initial history and pushed foundation commit b694bcc to main.
+- GitHub Actions run 40399816936 passed restore/audit, tool restore, formatting, Release build and tests: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40399816936
+- Added the live CI badge to README. GitHub CLI authorization includes workflow scope.
+- GitHub reported action runtime deprecation notices; the job passed. Updating action major versions can be handled with CI maintenance.
+- Desktop MY_PROJECT refresh follows this completed CI connection step; TASK-005 is next.

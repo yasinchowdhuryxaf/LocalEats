@@ -169,10 +169,13 @@ The first migration includes basic restaurant/menu/order/audit persistence. Late
 
 ## CI status
 
-Hosted CI: **not connected yet** (no GitHub remote is configured). The workflow is `.github/workflows/ci.yml`; it runs automatically after this project is pushed to GitHub. Add a repository-specific workflow badge here once the remote URL exists. No hosted pass is claimed before that run.
+[![Build and test](https://github.com/yasinchowdhuryxaf/LocalEats/actions/workflows/ci.yml/badge.svg)](https://github.com/yasinchowdhuryxaf/LocalEats/actions/workflows/ci.yml)
+
+GitHub remote: `yasinchowdhuryxaf/LocalEats` (private). The workflow runs on pushes and pull requests; the badge links to the actual hosted status.
 
 Shared build/analyzer settings are in `Directory.Build.props`; dependency versions are in `Directory.Packages.props`. See `docs/TEST_PLAN.md` for the Release verification commands and test naming convention.
 
 ## Portable copy after each completed task
 
 The working source is this workspace. After each successful task, refresh `C:\Users\acer\Desktop\MY_PROJECT` with source, documentation, configuration, migrations, local tool manifest and CI files. Exclude `.git`, `bin`, `obj`, `work`, `outputs`, `TestResults`, `.env`, user secrets and machine-specific data. Compare copied file hashes before reporting success. Copying source does not copy Docker database volumes; a new computer recreates the sample database through migrations and development seeding.
+

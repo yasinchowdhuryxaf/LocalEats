@@ -1,0 +1,11 @@
+@page "/admin"
+@using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Security
+@attribute [Authorize(Policy = RolePolicies.Admin)]
+
+<PageTitle>Administration | LocalEats</PageTitle>
+<main class="auth-page">
+    <h1>Administration</h1>
+    <p>You are signed in with administrator access.</p>
+    <a href="/session">Your session</a>
+</main>

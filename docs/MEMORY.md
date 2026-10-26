@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-007 login/logout implemented. TASK-008 authorization is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-008 role/ownership authorization implemented. TASK-009 account page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,21 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-008 - Add role and policy authorization (not started)**
+**TASK-009 - Add account page (not started)**
 
 ### Current task objective
 
-Add role policies and resource ownership checks in TASK-008. Registration and login/logout are implemented.
+Add the signed-in account page with server-validated profile editing in TASK-009. Role policies and the central order-ownership service are implemented.
 
 ### Current status
 
-TASK-001 through TASK-007 complete. TASK-008 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-008 complete. TASK-009 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-008 - Add role and resource authorization.
-2. TASK-009 - Add account page.
-3. TASK-010 - Create the application shell.
+1. TASK-009 - Add account page.
+2. TASK-010 - Create the application shell.
 
 ## 6. Known Decisions
 
@@ -270,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-008: Add role and policy authorization.
+We are starting TASK-009: Add account page.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -368,3 +367,13 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 
 - TASK-007 hosted CI passed all steps, including PostgreSQL-backed HTTP session tests: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40405927756 . Feature commit 0befc7a is published on main.
 - Desktop MY_PROJECT refreshed and all 107 portable files matched SHA-256 hashes. Final memory record copied after this entry. The normal Web app is left running at http://127.0.0.1:5015/login against the localeats development database; disposable browser credentials were removed from the test database.
+
+### 2026-10-27 - TASK-008 role/resource authorization
+
+- Added shared role names and CustomerAccess/ManagerAccess/AdminAccess policies in Application/Security; both hosts register authenticated exact-role policies. Infrastructure role constants reference the shared names.
+- Added server-protected minimal entry pages: /session/customer, /manager, /admin. Session navigation reflects signed roles, but route authorization independently blocks direct URL requests. Signed-in denials use /access-denied and anonymous requests challenge to login. These pages do not complete dashboard tasks.
+- Added IResourceAuthorizationService and a PostgreSQL ownership reader. Caller ID is read from authenticated Identity claims and ownership from the database, never from browser-supplied owner fields. Customers read their own existing orders; explicit Admin can read existing orders. Malformed/anonymous/unknown-role callers and missing orders are denied.
+- Manager resource reads remain denied until the real manager/restaurant assignment relationship in TASK-025. No assignment is inferred or faked. Order-view endpoints remain TASK-023 and must use this service/scope their data queries; no order UI is claimed here.
+- Added 13 Application security cases, 12 HTTP role/anonymous-route cases, and a real PostgreSQL changed-order-ID isolation test. Existing account/session tests remain. Final formatting passed; Release build passed with zero warnings/errors; all 59 tests passed (1 Domain, 28 Application, 30 API/HTTP/database), no failures/skips. Hosted CI follows.
+- Added docs/PERMISSIONS.md with the exact role matrix, ownership rules and deferred assignment/revocation integration. No schema change, migration, new dependency, privileged seed account or public role-grant endpoint was introduced.
+- Next task: TASK-009 account page. Branch: codex/task-008-authorization. Portable copy refresh follows final checks.

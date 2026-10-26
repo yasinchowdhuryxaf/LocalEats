@@ -1,5 +1,8 @@
 using System.Net;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
+using LocalEats.Application.Security;
+using LocalEats.Domain.Entities;
 using LocalEats.Infrastructure.Identity;
 using LocalEats.Infrastructure.Persistence;
 using LocalEats.Web;
@@ -17,6 +20,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private WebApplicationFactory<WebEntryPoint>? factory;
     private readonly string email = $"session-{Guid.NewGuid():N}@example.test";
     private const string Password = "Session-Test-Password123!";
+    private Guid? testRestaurantId;
 
     public async Task InitializeAsync()
     {
@@ -147,6 +151,103 @@ public sealed class SessionHttpTests : IAsyncLifetime
         Assert.True(await users.IsLockedOutAsync(user));
     }
 
+    [Theory]
+    [InlineData(ApplicationRoles.Customer, "/session/customer", true)]
+    [InlineData(ApplicationRoles.Customer, "/manager", false)]
+    [InlineData(ApplicationRoles.Customer, "/admin", false)]
+    [InlineData(ApplicationRoles.Manager, "/session/customer", false)]
+    [InlineData(ApplicationRoles.Manager, "/manager", true)]
+    [InlineData(ApplicationRoles.Manager, "/admin", false)]
+    [InlineData(ApplicationRoles.Admin, "/session/customer", false)]
+    [InlineData(ApplicationRoles.Admin, "/manager", false)]
+    [InlineData(ApplicationRoles.Admin, "/admin", true)]
+    public async Task RolePages_SignedInRole_EnforcesPolicyOnServer(string role, string path, bool allowed)
+    {
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await users.FindByEmailAsync(email);
+            Assert.NotNull(user);
+            Assert.True((await users.RemoveFromRoleAsync(user, ApplicationRoles.Customer)).Succeeded);
+            Assert.True((await users.AddToRoleAsync(user, role)).Succeeded);
+        }
+
+        using var client = Client();
+        Assert.Equal(HttpStatusCode.Redirect, (await Login(client, email, Password)).StatusCode);
+        var response = await client.GetAsync(path);
+        if (allowed)
+        {
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+            Assert.Contains("/access-denied", response.Headers.Location?.ToString());
+        }
+    }
+
+    [Theory]
+    [InlineData("/session/customer")]
+    [InlineData("/manager")]
+    [InlineData("/admin")]
+    public async Task RolePages_Anonymous_RedirectsToLogin(string path)
+    {
+        using var client = Client();
+        var response = await client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("/login?ReturnUrl=", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task OrderOwnership_LoadedFromPostgres_DeniesChangedIdAndAllowsExplicitAdmin()
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = await users.FindByEmailAsync(email);
+        Assert.NotNull(user);
+        var database = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var now = DateTimeOffset.UtcNow;
+        var restaurant = new Restaurant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Authorization test",
+            Slug = $"authorization-{Guid.NewGuid():N}",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        testRestaurantId = restaurant.Id;
+        var ownOrder = new Order
+        {
+            Id = Guid.NewGuid(),
+            Restaurant = restaurant,
+            CustomerId = user.Id,
+            OrderNumber = $"OWN-{Guid.NewGuid():N}",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        var otherOrder = new Order
+        {
+            Id = Guid.NewGuid(),
+            Restaurant = restaurant,
+            CustomerId = Guid.NewGuid(),
+            OrderNumber = $"OTHER-{Guid.NewGuid():N}",
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+        database.Orders.AddRange(ownOrder, otherOrder);
+        await database.SaveChangesAsync();
+        var authorization = scope.ServiceProvider.GetRequiredService<IResourceAuthorizationService>();
+        var customer = await scope.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<ApplicationUser>>().CreateAsync(user);
+
+        Assert.True(await authorization.CanReadOrderAsync(customer, ownOrder.Id));
+        Assert.False(await authorization.CanReadOrderAsync(customer, otherOrder.Id));
+        Assert.False(await authorization.CanReadOrderAsync(customer, Guid.NewGuid()));
+        Assert.True((await users.AddToRoleAsync(user, ApplicationRoles.Admin)).Succeeded);
+        var admin = await scope.ServiceProvider.GetRequiredService<IUserClaimsPrincipalFactory<ApplicationUser>>().CreateAsync(user);
+        Assert.True(await authorization.CanReadOrderAsync(admin, otherOrder.Id));
+        Assert.False(await authorization.CanReadOrderAsync(new ClaimsPrincipal(), ownOrder.Id));
+    }
+
     private WebApplicationFactory<WebEntryPoint> Factory => factory ?? throw new InvalidOperationException("Not initialized.");
 
     private HttpClient Client() => Factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -194,6 +295,12 @@ public sealed class SessionHttpTests : IAsyncLifetime
         {
             await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Users
                 .Where(user => user.Email == email).ExecuteDeleteAsync();
+            if (testRestaurantId is Guid restaurantId)
+            {
+                var database = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+                await database.Orders.Where(order => order.RestaurantId == restaurantId).ExecuteDeleteAsync();
+                await database.Restaurants.Where(restaurant => restaurant.Id == restaurantId).ExecuteDeleteAsync();
+            }
         }
 
         await factory.DisposeAsync();

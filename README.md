@@ -4,7 +4,7 @@ LocalEats is a C# food-ordering platform built with Blazor, ASP.NET Core, and Po
 
 ## Current status
 
-TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is implemented at `/register`. Login/logout is implemented at /login and /logout; role/resource authorization is next in TASK-008. Basic persistence entities exist; restaurant and ordering features are still pending.
+TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is implemented at `/register`. Login/logout is implemented at /login and /logout; role policies and central order ownership checks are implemented in TASK-008. The account page is next in TASK-009. Basic persistence entities exist; restaurant and ordering features are still pending.
 
 ## Technology
 
@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-008 - Add role and policy authorization
+TASK-009 - Add account page
 ```
 
 
@@ -195,3 +195,8 @@ If it already exists, retain it. See `docs/TEST_PLAN.md` for `LOCALEATS_TEST_CON
 ## Sign-in and sign-out (TASK-007)
 
 Open `/login` after registering. Successful sign-in opens `/session` (a protected status page). `/logout` shows confirmation and submits a protected POST to sign out. Invalid credentials and lockout use the same generic message. Sessions use an eight-hour sliding cookie; the remember option persists it across browser restarts. Production cookies require HTTPS. Role policies, account pages and dashboards follow in later tasks. See `docs/SECURITY.md` for the current scope and deployment requirements.
+
+
+## Authorization (TASK-008)
+
+Customer, Manager and Admin entry pages require their explicit signed-in roles on the server. `/session` shows the relevant entry links. Wrong-role direct requests go to `/access-denied`; anonymous requests go to login. No privileged account is seeded and registration cannot choose roles. See `docs/PERMISSIONS.md` for the exact access matrix and the central order ownership service. Manager restaurant assignments and actual dashboards/order pages remain their scheduled feature tasks.

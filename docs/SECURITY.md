@@ -8,7 +8,7 @@ TASK-007 implements cookie sign-in on the Web host using ASP.NET Core Identity. 
 - Cookies are HttpOnly, SameSite=Lax, expire after eight hours with sliding renewal, and require HTTPS outside Development. The remember option makes the cookie persist across browser restarts within its lifetime.
 - Logout requires an authenticated, antiforgery-protected POST. GET only shows confirmation. Standard Identity sign-out clears the current browser cookie; it does not sign out other devices or revoke every previously issued ticket.
 - Return URLs must start with a single slash and contain no backslashes/control characters. Invalid destinations fall back to /session.
-- /session is a minimal authenticated status page; it is not the account page or a dashboard. Role/resource policies are TASK-008.
+- /session is a minimal authenticated status page; it is not the account page or a dashboard. TASK-008 adds explicit role entry policies and central order ownership checks; see PERMISSIONS.md.
 - Registration provisions only Customer. Manager/Admin roles cannot be selected by the browser.
 
 Production rollout must provision roles, use HTTPS, persist/protect Data Protection keys, and select a key-sharing/session strategy if multiple hosts or replicas are deployed. Web/API cookies are not yet configured for shared authentication across separate hosts. Broader rate limiting, revocation requirements and security review remain the scheduled security/deployment tasks.

@@ -61,17 +61,17 @@ Before changing code, ask Codex to read:
 The next task is:
 
 ```text
-TASK-008 - Add role and policy authorization
+TASK-009 - Add account page
 ```
 
-TASK-001 through TASK-004 are implemented. Database migrations, development sample data and build/CI configuration are included. TASK-005 added Identity accounts and roles. TASK-006 added registration at /register. TASK-007 added login/logout. TASK-008 adds role/resource authorization.
+TASK-001 through TASK-004 are implemented. Database migrations, development sample data and build/CI configuration are included. TASK-005 added Identity accounts and roles. TASK-006 added registration at /register. TASK-007 added login/logout. TASK-008 added role/resource authorization. TASK-009 adds the account page.
 
 Use this first Codex prompt:
 
 ```text
 Read AGENTS.md and all files inside docs/.
 
-We are starting TASK-008 from docs/TASKS.md.
+We are starting TASK-009 from docs/TASKS.md.
 First inspect the current solution and provide a plan.
 Do not edit files until the plan is clear.
 ```

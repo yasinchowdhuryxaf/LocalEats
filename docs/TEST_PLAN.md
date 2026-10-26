@@ -41,3 +41,7 @@ GitHub execution and its badge require a GitHub repository remote and a push. Lo
 ## Login/logout HTTP checks (TASK-007)
 
 The API test project references the Web host and Microsoft.AspNetCore.Mvc.Testing (test-only) to send actual HTTP form requests through an in-process host. Tests use the same dedicated `_tests` PostgreSQL database; PostgreSQL test classes run serially and remove only their generated users. Covered: authentication/anonymous access, generic failure messages, local-only return URLs, protected logout POST, cookies, remember option, and lockout. Browser verification also exercised registration → failed login → successful login → logout → protected-page redirect with a disposable test account.
+
+## Role and ownership checks (TASK-008)
+
+The HTTP suite tests the full 3×3 signed-role/entry-page matrix plus anonymous access to each role page. Application security tests reject untrusted/malformed principals, unknown roles, other-customer orders and missing records. The PostgreSQL isolation test creates two orders with different owners, checks access using Identity-generated claims, and verifies explicit Admin access. It removes only its own restaurant/orders and user during cleanup. These tests do not claim a complete manager assignment or dashboard/order-view feature.

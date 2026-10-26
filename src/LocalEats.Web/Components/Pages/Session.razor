@@ -1,10 +1,28 @@
 @page "/session"
 @using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Security
 @attribute [Authorize]
 
 <PageTitle>Signed in | LocalEats</PageTitle>
 <main class="auth-page">
     <h1>You are signed in</h1>
     <p>Your LocalEats session is active.</p>
+    @if (HttpContext?.User.IsInRole(RoleNames.Customer) == true)
+    {
+        <p><a href="/session/customer">Customer area</a></p>
+    }
+    @if (HttpContext?.User.IsInRole(RoleNames.Manager) == true)
+    {
+        <p><a href="/manager">Manager area</a></p>
+    }
+    @if (HttpContext?.User.IsInRole(RoleNames.Admin) == true)
+    {
+        <p><a href="/admin">Admin area</a></p>
+    }
     <a href="/logout">Sign out</a>
 </main>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+}

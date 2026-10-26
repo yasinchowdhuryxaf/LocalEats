@@ -172,11 +172,13 @@ Tests:
 
 ## TASK-008: Add role and policy authorization
 
-- [ ] Create Customer, Manager, and Admin policies.
-- [ ] Add protected route behavior.
-- [ ] Add server-side authorization checks.
-- [ ] Add a central resource-ownership authorization service.
-- [ ] Add authorization documentation to `docs/PERMISSIONS.md`.
+Status: [x] Complete — role/ownership verification recorded in MEMORY.md.
+
+- [x] Create Customer, Manager, and Admin policies.
+- [x] Add protected route behavior.
+- [x] Add server-side authorization checks.
+- [x] Add a central resource-ownership authorization service.
+- [x] Add authorization documentation to `docs/PERMISSIONS.md`.
 
 Acceptance criteria:
 
@@ -703,11 +705,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 2 - Authentication
-- Current task: TASK-008
-- Branch: `codex/task-007-login-logout`
+- Current task: TASK-009
+- Branch: `codex/task-008-authorization`
 - Status: [ ] Not started
-- Last completed task: TASK-007 - Build login and logout
-- Next task: TASK-008 - Add role and policy authorization
-- Known issues: E2E automation remains a later task. Role/resource policy enforcement is next.
+- Last completed task: TASK-008 - Add role and policy authorization
+- Next task: TASK-009 - Add account page
+- Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

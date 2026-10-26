@@ -1,3 +1,4 @@
+using LocalEats.Application.Security;
 using LocalEats.Application.Users;
 using LocalEats.Infrastructure.Identity;
 using LocalEats.Infrastructure.Persistence;
@@ -43,7 +44,14 @@ public static class DependencyInjection
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.SlidingExpiration = true;
         });
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(RolePolicies.Customer, policy => policy.RequireAuthenticatedUser().RequireRole(RoleNames.Customer));
+            options.AddPolicy(RolePolicies.Manager, policy => policy.RequireAuthenticatedUser().RequireRole(RoleNames.Manager));
+            options.AddPolicy(RolePolicies.Admin, policy => policy.RequireAuthenticatedUser().RequireRole(RoleNames.Admin));
+        });
+        services.AddScoped<IOrderOwnershipReader, OrderOwnershipReader>();
+        services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<IRegistrationStore, IdentityRegistrationStore>();
         services.AddScoped<ISessionStore, IdentitySessionStore>();
 

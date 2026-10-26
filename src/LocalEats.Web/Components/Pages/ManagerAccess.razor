@@ -3,9 +3,33 @@
 @using LocalEats.Application.Security
 @attribute [Authorize(Policy = RolePolicies.Manager)]
 
-<PageTitle>Restaurant manager | LocalEats</PageTitle>
-<section class="auth-page">
-    <h1>Restaurant manager</h1>
-    <p>You are signed in with manager access.</p>
-    <a href="/session">Your session</a>
+<PageTitle>Manager dashboard | LocalEats</PageTitle>
+<section class="manager-dashboard" aria-labelledby="manager-heading">
+    <p class="eyebrow">Your restaurant workspace</p>
+    <h1 id="manager-heading">Manager dashboard</h1>
+    <p>Prepare your restaurant workspace. Management tools will become available in later project phases.</p>
+    <div class="manager-grid">
+        <section class="manager-card" aria-labelledby="setup-heading">
+            <h2 id="setup-heading">Restaurant setup</h2>
+            <p><strong>Assignment integration coming soon</strong></p>
+            <p>Restaurant assignments are not connected yet. This page does not determine whether you have an assigned restaurant.</p>
+            <a href="/manager/restaurant">Restaurant setup</a>
+        </section>
+        <section class="manager-card" aria-labelledby="pending-heading">
+            <h2 id="pending-heading">Pending orders</h2>
+            <p><strong>Count not available yet</strong></p>
+            <p>Your pending order count will appear when restaurant assignments and order management are connected.</p>
+            <a href="/manager/orders">Manage orders</a>
+        </section>
+        <section class="manager-card" aria-labelledby="menu-heading">
+            <h2 id="menu-heading">Your menu</h2>
+            <p>Menu editing is coming soon. You will be able to organize categories, prices, and item availability.</p>
+            <a href="/manager/menu">Manage menu</a>
+        </section>
+        <section class="manager-card" aria-labelledby="account-heading">
+            <h2 id="account-heading">Your account</h2>
+            <p><a href="/account">Manage my account</a></p>
+            <p><a href="/logout">Sign out</a></p>
+        </section>
+    </div>
 </section>

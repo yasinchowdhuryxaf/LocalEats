@@ -228,11 +228,11 @@ Acceptance criteria:
 
 ## TASK-012: Build the manager dashboard
 
-- [ ] Create `/manager`.
-- [ ] Show restaurant setup status.
-- [ ] Show pending order count placeholder.
-- [ ] Add links to restaurant, menu, and orders.
-- [ ] Restrict the page to Manager users.
+- [x] Create `/manager`.
+- [x] Show restaurant setup status.
+- [x] Show pending order count placeholder.
+- [x] Add links to restaurant, menu, and orders.
+- [x] Restrict the page to Manager users.
 
 ## TASK-013: Build the admin dashboard
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 3 - Customer Dashboard
-- Current task: TASK-012
-- Branch: `codex/task-011-dashboard`
+- Current task: TASK-013
+- Branch: `codex/task-012-manager-dashboard`
 - Status: [ ] Not started
-- Last completed task: TASK-011 - Build the customer dashboard
-- Next task: TASK-012 - Build the manager dashboard
+- Last completed task: TASK-012 - Build the manager dashboard
+- Next task: TASK-013 - Build the admin dashboard
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

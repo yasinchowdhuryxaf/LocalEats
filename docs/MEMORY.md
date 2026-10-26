@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-011 customer dashboard implemented. TASK-012 manager dashboard is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-012 manager dashboard implemented. TASK-013 admin dashboard is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-012 - Build the manager dashboard (not started)**
+**TASK-013 - Build the admin dashboard (not started)**
 
 ### Current task objective
 
-Build the manager dashboard in TASK-012. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Build the admin dashboard in TASK-013. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-011 complete. TASK-012 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-012 complete. TASK-013 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-012 - Build manager dashboard.
-2. TASK-013 - Build the admin dashboard.
+1. TASK-013 - Build admin dashboard.
+2. TASK-014 - Add dashboard integration tests.
 
 ## 6. Known Decisions
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-012: Build the manager dashboard.
+We are starting TASK-013: Build the admin dashboard.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -415,3 +415,13 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Browser verified registration, default sign-in to /dashboard, widths 375/768/1440 without overflow, restaurant placeholder and sign-out. Removed the disposable dashboard-ui-20261027@example.test user afterward; real users were unchanged.
 - Hosted CI and Desktop MY_PROJECT sync/hash verification follow. Next: TASK-012 manager dashboard. Normal development Web host remains available at http://127.0.0.1:5015/ .
 - TASK-011 hosted CI passed every step: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40411295304 . Feature commit 480fdfe is published on main. Desktop MY_PROJECT refreshed and all 134 portable files matched SHA-256 hashes; final memory copied after this entry. Existing CI action-runtime notices remain non-blocking maintenance.
+
+### 2026-10-27 - TASK-012 manager dashboard
+
+- Replaced /manager authorization shell with a ManagerAccess-protected dashboard: setup integration status, pending count placeholder, restaurant/menu/order links, account and sign-out actions. Uses shared design tokens and a responsive card grid.
+- Added three ManagerAccess-protected coming-soon destinations /manager/restaurant, /manager/menu, /manager/orders in ManagerTools.razor. These are navigation placeholders, not CRUD or order-processing implementations.
+- Assignment state and order count are deliberately unknown, not inferred from roles or shown as zero. Real manager/restaurant assignments remain TASK-025, menu management TASK-028 and order management TASK-029. No business data is read or changed by these pages.
+- No new dependencies, schema changes or migration required. Added 12 HTTP cases for role/anonymous access to the three tools and extended existing Manager dashboard assertions for status and links.
+- Formatting passed; Release build passed with zero warnings/errors; all 100 tests passed (1 Domain, 38 Application, 61 HTTP/database), zero failures/skips. Browser confirmed anonymous /manager redirects to login.
+- Authenticated visual browser check was not performed: automatic approval review rejected temporarily granting Manager to a disposable UI account because that privilege change was not specifically authorized. No grant was executed or bypassed. Removed the newly registered unprivileged manager-ui-20261027@example.test account. Manager rendering/access was verified through existing isolated HTTP test fixtures instead; manual manager visual QA remains outstanding.
+- Hosted CI and Desktop MY_PROJECT hash verification follow. Next: TASK-013 admin dashboard. Normal Web host remains running at http://127.0.0.1:5015/ .

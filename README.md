@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-012 - Build the manager dashboard
+TASK-013 - Build the admin dashboard
 ```
 
 
@@ -209,3 +209,7 @@ After signing in, open `/account` or select Your account from `/session`. Email 
 ## Customer dashboard (TASK-011)
 
 Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens a coming-soon page until TASK-017; ordering and order history are not implemented yet. Explicit safe local login return URLs remain honored.
+
+## Manager dashboard (TASK-012)
+
+Manager-role users can open /manager. Restaurant setup, menu and orders links lead to protected coming-soon pages. Assignment status and pending counts are not connected yet; real restaurant ownership remains TASK-025. No default Manager account or public role-grant endpoint exists.

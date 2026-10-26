@@ -220,6 +220,15 @@ public sealed class SessionHttpTests : IAsyncLifetime
     [InlineData(ApplicationRoles.Manager, "/dashboard", false)]
     [InlineData(ApplicationRoles.Admin, "/dashboard", false)]
     [InlineData(ApplicationRoles.Customer, "/manager", false)]
+    [InlineData(ApplicationRoles.Customer, "/manager/restaurant", false)]
+    [InlineData(ApplicationRoles.Customer, "/manager/menu", false)]
+    [InlineData(ApplicationRoles.Customer, "/manager/orders", false)]
+    [InlineData(ApplicationRoles.Manager, "/manager/restaurant", true)]
+    [InlineData(ApplicationRoles.Manager, "/manager/menu", true)]
+    [InlineData(ApplicationRoles.Manager, "/manager/orders", true)]
+    [InlineData(ApplicationRoles.Admin, "/manager/restaurant", false)]
+    [InlineData(ApplicationRoles.Admin, "/manager/menu", false)]
+    [InlineData(ApplicationRoles.Admin, "/manager/orders", false)]
     [InlineData(ApplicationRoles.Customer, "/admin", false)]
     [InlineData(ApplicationRoles.Manager, "/session/customer", false)]
     [InlineData(ApplicationRoles.Manager, "/manager", true)]
@@ -244,6 +253,29 @@ public sealed class SessionHttpTests : IAsyncLifetime
         if (allowed)
         {
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var html = await response.Content.ReadAsStringAsync();
+            if (path == "/manager")
+            {
+                Assert.Contains("Manager dashboard", html);
+                Assert.Contains("Assignment integration coming soon", html);
+                Assert.Contains("Count not available yet", html);
+                foreach (var route in new[] { "/manager/restaurant", "/manager/menu", "/manager/orders" })
+                {
+                    Assert.Contains($"href=\"{route}\"", html);
+                }
+            }
+            else if (path.StartsWith("/manager/", StringComparison.Ordinal))
+            {
+                Assert.Contains("These tools are not available yet.", html);
+                Assert.Contains("href=\"/manager\"", html);
+                var heading = path switch
+                {
+                    "/manager/menu" => "Menu management is coming soon",
+                    "/manager/orders" => "Order management is coming soon",
+                    _ => "Restaurant setup is coming soon"
+                };
+                Assert.Contains($"<h1>{heading}</h1>", html);
+            }
         }
         else
         {
@@ -256,6 +288,9 @@ public sealed class SessionHttpTests : IAsyncLifetime
     [InlineData("/session/customer")]
     [InlineData("/dashboard")]
     [InlineData("/manager")]
+    [InlineData("/manager/restaurant")]
+    [InlineData("/manager/menu")]
+    [InlineData("/manager/orders")]
     [InlineData("/admin")]
     public async Task RolePages_Anonymous_RedirectsToLogin(string path)
     {

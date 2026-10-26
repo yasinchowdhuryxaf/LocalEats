@@ -60,17 +60,17 @@ Before changing code, ask Codex to read:
 The next task is:
 
 ```text
-TASK-005 - Add application user and Identity
+TASK-006 - Build registration
 ```
 
-TASK-001 through TASK-004 are implemented. Database migrations, development sample data and build/CI configuration are included. TASK-005 adds Identity accounts and roles.
+TASK-001 through TASK-004 are implemented. Database migrations, development sample data and build/CI configuration are included. TASK-005 added Identity accounts and roles. TASK-006 adds registration.
 
 Use this first Codex prompt:
 
 ```text
 Read AGENTS.md and all files inside docs/.
 
-We are starting TASK-005 from docs/TASKS.md.
+We are starting TASK-006 from docs/TASKS.md.
 First inspect the current solution and provide a plan.
 Do not edit files until the plan is clear.
 ```
@@ -81,4 +81,3 @@ Do not edit files until the plan is clear.
 - `.env.example` contains development placeholders only.
 - Keep `.env` and user secrets on each computer separately.
 - Generated `bin/`, `obj/`, and local database data are not part of the source project.
-

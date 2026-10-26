@@ -4,7 +4,7 @@ LocalEats is a C# food-ordering platform built with Blazor, ASP.NET Core, and Po
 
 ## Current status
 
-TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity is next in TASK-005. Basic persistence entities exist; restaurant and ordering features are still pending.
+TASK-001 through TASK-003 are complete. TASK-004 adds shared analyzer settings, centralized package versions and a GitHub Actions build/test workflow. Identity persistence and development roles are implemented in TASK-005. Registration is next in TASK-006. Basic persistence entities exist; restaurant and ordering features are still pending.
 
 ## Technology
 
@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-005 - Add application user and Identity
+TASK-006 - Build registration
 ```
 
 
@@ -178,4 +178,3 @@ Shared build/analyzer settings are in `Directory.Build.props`; dependency versio
 ## Portable copy after each completed task
 
 The working source is this workspace. After each successful task, refresh `C:\Users\acer\Desktop\MY_PROJECT` with source, documentation, configuration, migrations, local tool manifest and CI files. Exclude `.git`, `bin`, `obj`, `work`, `outputs`, `TestResults`, `.env`, user secrets and machine-specific data. Compare copied file hashes before reporting success. Copying source does not copy Docker database volumes; a new computer recreates the sample database through migrations and development seeding.
-

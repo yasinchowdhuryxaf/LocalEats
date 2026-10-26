@@ -1,4 +1,6 @@
 using LocalEats.Domain.Entities;
+using LocalEats.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +14,9 @@ public static class DevelopmentDataSeeder
         var dbContext = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
 
         await dbContext.Database.MigrateAsync(cancellationToken);
+
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        await DevelopmentRoleSeeder.SeedAsync(roleManager);
 
         if (await dbContext.Restaurants.AnyAsync(cancellationToken))
         {

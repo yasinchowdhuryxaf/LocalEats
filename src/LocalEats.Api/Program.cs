@@ -10,6 +10,8 @@ var app = builder.Build();
 await app.Services.SeedDevelopmentDataAsync(app.Environment.IsDevelopment());
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 

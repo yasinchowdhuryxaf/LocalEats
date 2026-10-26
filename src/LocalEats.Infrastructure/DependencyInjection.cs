@@ -1,4 +1,6 @@
+using LocalEats.Infrastructure.Identity;
 using LocalEats.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,27 @@ public static class DependencyInjection
             options.UseNpgsql(
                 connectionString,
                 npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(LocalEatsDbContext).Assembly.FullName)));
+
+        services.AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
+        {
+            options.User.RequireUniqueEmail = true;
+            options.Password.RequiredLength = 12;
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        })
+            .AddEntityFrameworkStores<LocalEatsDbContext>()
+            .AddDefaultTokenProviders();
+
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.Name = "LocalEats.Auth";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+            options.LoginPath = "/login";
+            options.AccessDeniedPath = "/access-denied";
+        });
+        services.AddAuthorization();
 
         services.AddHealthChecks()
             .AddCheck<Persistence.PostgresHealthCheck>("postgresql");

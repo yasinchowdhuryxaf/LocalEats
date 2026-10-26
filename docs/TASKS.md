@@ -120,11 +120,13 @@ Goal: allow customers, managers, and administrators to sign in safely.
 
 ## TASK-005: Add application user and Identity
 
-- [ ] Add `ApplicationUser`.
-- [ ] Configure ASP.NET Core Identity.
-- [ ] Add Identity migrations.
-- [ ] Seed the development roles: Customer, Manager, Admin.
-- [ ] Do not implement custom password hashing.
+Status: [x] Complete — verified 2026-10-27.
+
+- [x] Add `ApplicationUser`.
+- [x] Configure ASP.NET Core Identity.
+- [x] Add Identity migrations.
+- [x] Seed the development roles: Customer, Manager, Admin.
+- [x] Do not implement custom password hashing.
 
 Acceptance criteria:
 
@@ -697,15 +699,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 1 - Project Setup
-- Current task: TASK-005
-- Branch: `codex/task-004-quality-checks` (uncommitted)
+- Current task: TASK-006
+- Branch: `codex/task-005-identity`
 - Status: [ ] Not started
-- Last completed task: TASK-004 - Configure quality checks (local verification passed; hosted CI pending remote)
-- Next task: TASK-005 - Add application user and Identity
-- Known issues: No GitHub remote or hosted CI run yet. Application and E2E test projects remain placeholders.
+- Last completed task: TASK-005 - Add application user and Identity
+- Next task: TASK-006 - Build registration
+- Known issues: Application and E2E test projects remain placeholders. Login and registration UI are separate upcoming tasks.
 
 Update this section after every completed task.
-
-
-
-

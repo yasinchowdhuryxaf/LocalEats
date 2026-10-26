@@ -1,9 +1,13 @@
 using LocalEats.Domain.Entities;
+using LocalEats.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace LocalEats.Infrastructure.Persistence;
 
-public sealed class LocalEatsDbContext(DbContextOptions<LocalEatsDbContext> options) : DbContext(options)
+public sealed class LocalEatsDbContext(DbContextOptions<LocalEatsDbContext> options)
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Restaurant> Restaurants => Set<Restaurant>();
 

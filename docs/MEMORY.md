@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-004 implemented and locally verified. TASK-005 Identity is next. Hosted CI awaits a GitHub remote.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-005 Identity foundation implemented. GitHub CI is connected and passing. TASK-006 registration is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,7 +112,7 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-005 - Add application user and Identity (not started)**
+**TASK-006 - Build registration (not started)**
 
 ### Current task objective
 
@@ -291,7 +291,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-005: Add application user and Identity.
+We are starting TASK-006: Build registration.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -347,3 +347,15 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Added the live CI badge to README. GitHub CLI authorization includes workflow scope.
 - GitHub reported action runtime deprecation notices; the job passed. Updating action major versions can be handled with CI maintenance.
 - Desktop MY_PROJECT refresh follows this completed CI connection step; TASK-005 is next.
+
+### 2026-10-27 - TASK-005 Identity foundation
+
+- Added Infrastructure/Identity/ApplicationUser (GUID keys), shared role names and development role provisioning. Added ASP.NET Core Identity EF provider 10.0.14 and framework reference; removed redundant packages supplied by the shared framework.
+- LocalEatsDbContext now extends IdentityDbContext. AddIdentity migration created standard AspNet tables and applied successfully to the local PostgreSQL database; existing 2 sample restaurants were preserved.
+- Customer, Manager and Admin persisted exactly once. Starting Web after API reused existing roles without inserting duplicates. No preset users or passwords are created.
+- Both hosts register Identity and authentication/authorization middleware. Default password hashing/token generation is provided by Identity.
+- Tests cover Identity service registration/defaults, GUID account/role mappings, and standard password hashing. Existing foundation and Domain boundary tests remain.
+- API and Web health endpoints returned HTTP 200 Healthy. Formatting passed. Final Release build passed with zero warnings/errors; all 6 tests passed, zero failures/skips.
+- ADR docs/decisions/0001-identity-persistence.md explains why Identity-dependent ApplicationUser belongs in Infrastructure, replacing the earlier Domain example.
+- Registration, login/logout, role policy enforcement and account UI remain TASK-006 onward. No sign-in UI or feature E2E coverage is claimed.
+- Portable copy sync: refreshing after local verification; final hash result follows. Next task is TASK-006 registration.

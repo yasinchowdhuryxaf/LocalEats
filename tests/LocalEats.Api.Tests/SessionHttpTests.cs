@@ -109,6 +109,93 @@ public sealed class SessionHttpTests : IAsyncLifetime
         Assert.Equal(expected, response.Headers.Location?.ToString());
     }
 
+    [Theory]
+    [InlineData("userId")]
+    [InlineData("customerId")]
+    public async Task Dashboard_TwoCustomers_QueryCannotSelectAnotherProfile(string queryKey)
+    {
+        var otherEmail = $"dashboard-{Guid.NewGuid():N}@example.test";
+        Guid ownId;
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var own = await users.FindByEmailAsync(email);
+            Assert.NotNull(own);
+            ownId = own.Id;
+            own.DisplayName = "Customer Alpha Private";
+            Assert.True((await users.UpdateAsync(own)).Succeeded);
+            var other = new ApplicationUser
+            {
+                Email = otherEmail,
+                UserName = otherEmail,
+                DisplayName = "Customer Beta Private"
+            };
+            Assert.True((await users.CreateAsync(other, Password)).Succeeded);
+            extraUserId = other.Id;
+            Assert.True((await users.AddToRoleAsync(other, ApplicationRoles.Customer)).Succeeded);
+        }
+
+        using var first = Client();
+        using var second = Client();
+        Assert.Equal(HttpStatusCode.Redirect, (await Login(first, email, Password)).StatusCode);
+        Assert.Equal(HttpStatusCode.Redirect, (await Login(second, otherEmail, Password)).StatusCode);
+        var firstHtml = await first.GetStringAsync($"/dashboard?{queryKey}={extraUserId}");
+        var secondHtml = await second.GetStringAsync($"/dashboard?{queryKey}={ownId}");
+        Assert.Contains("Welcome, Customer Alpha Private!", firstHtml);
+        Assert.DoesNotContain("Customer Beta Private", firstHtml);
+        Assert.DoesNotContain(otherEmail, firstHtml);
+        Assert.Contains("Welcome, Customer Beta Private!", secondHtml);
+        Assert.DoesNotContain("Customer Alpha Private", secondHtml);
+        Assert.DoesNotContain(email, secondHtml);
+    }
+
+    [Fact]
+    public async Task Dashboard_BlankProfile_ShowsFallbackWelcomeAndFutureOrderState()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var html = await client.GetStringAsync("/dashboard");
+        Assert.Contains("Welcome back!", html);
+        Assert.Contains("Order history is coming soon", html);
+        Assert.Contains("When ordering is available", html);
+        Assert.DoesNotContain("We couldn", html);
+    }
+
+    [Fact]
+    public async Task Dashboard_ProfileDeletedAfterLogin_ShowsSafeRetryInsteadOfPrivateData()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Users
+                .Where(user => user.Email == email).ExecuteDeleteAsync();
+        }
+        var response = await client.GetAsync("/dashboard");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Assert.Contains("We couldn’t load your account details. Please try again.", html);
+        Assert.Contains("Reload dashboard", html);
+        Assert.DoesNotContain(email, html);
+        Assert.DoesNotContain("Npgsql", html);
+        Assert.DoesNotContain("Exception", html);
+    }
+
+    [Theory]
+    [InlineData("/dashboard")]
+    [InlineData("/manager")]
+    [InlineData("/admin")]
+    public async Task Dashboard_AfterLogout_ChallengesBeforeRoleAuthorization(string path)
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/logout");
+        Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync("/logout", new FormUrlEncodedContent(fields))).StatusCode);
+        var response = await client.GetAsync(path);
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("/login?ReturnUrl=", response.Headers.Location?.ToString());
+    }
+
     [Fact]
     public async Task ProtectedPage_Anonymous_RedirectsToLogin()
     {

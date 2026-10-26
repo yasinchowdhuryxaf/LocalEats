@@ -57,3 +57,17 @@ TASK-011: HTTP tests cover Customer-only /dashboard, anonymous login challenge, 
 TASK-012: HTTP role matrix covers /manager and its restaurant/menu/orders destinations, including anonymous challenges and Customer/Admin-only denial. Allowed Manager responses verify setup/count placeholders, links and route-specific headings. Browser verified anonymous login redirect. Authenticated visual QA was not run because temporary UI-account privilege provisioning was rejected by automatic approval review; no grant was made. Existing isolated test fixtures verified authenticated responses.
 
 TASK-013: HTTP role matrix covers /admin, /admin/restaurants and /admin/users. Tests verify Admin-only access, Customer/Manager denial, anonymous login challenges, count placeholder, management/account/logout links and route-specific placeholder headings. Browser confirms anonymous /admin redirects to login. Authenticated visual QA is not performed; authenticated rendering is checked with isolated HTTP test fixtures. No development-account privilege changes are made.
+
+## Dashboard integration coverage (TASK-014)
+
+| Requirement | Coverage |
+|---|---|
+| Logged-out redirects | Existing anonymous route matrix for customer, manager, admin and tool routes; added post-logout challenges for all three dashboards. |
+| Role access | Existing real Identity cookie role matrix permits only each explicitly assigned dashboard role and denies other roles. |
+| Empty/placeholder state | Blank Customer profile renders Welcome back and the future-order placeholder. Manager/Admin fixtures assert unavailable counts and correct navigation. |
+| Customer isolation | Two separately signed-in customers request each other's IDs through userId/customerId query strings. Each response contains only its caller's display name. |
+| Missing profile | Delete only the fixture's own test account after login; assert safe load failure and retry without account details or provider exceptions. |
+
+These tests use real HTTP requests, Identity cookies and PostgreSQL in the dedicated `_tests` database. Each fixture removes only its generated users. No running development account is granted privileges. This task introduces no schema, runtime behavior or dependencies.
+
+Order-history and assigned-restaurant isolation cannot be asserted as implemented features yet: the dashboards currently expose placeholders. Add those integration cases when TASK-023 and TASK-025 connect the real data. Browser E2E automation remains TASK-045; manager/admin visual QA remains outstanding.

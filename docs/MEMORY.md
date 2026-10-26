@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-013 admin dashboard implemented. TASK-014 dashboard integration tests are next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-014 dashboard integration tests complete. TASK-015 restaurant domain entities are next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -108,24 +108,24 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current phase
 
-**Phase 3 - Customer Dashboard**
+**Phase 4 - Restaurant Directory and Menu Browsing**
 
 ### Current task
 
-**TASK-014 - Add dashboard integration tests (not started)**
+**TASK-015 - Create restaurant domain entities (not started)**
 
 ### Current task objective
 
-Complete dashboard integration coverage in TASK-014, including own-profile isolation. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Review and extend the early restaurant entities in TASK-015; add required fields, rules, indexes and migrations. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-013 complete. TASK-014 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-014 complete. TASK-015 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-014 - Add dashboard integration tests.
-2. TASK-015 - Create restaurant domain entities.
+1. TASK-015 - Create restaurant domain entities.
+2. TASK-016 - Seed restaurants and menu data.
 
 ## 6. Known Decisions
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-014: Add dashboard integration tests.
+We are starting TASK-015: Create restaurant domain entities.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -436,3 +436,13 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Authenticated admin visual QA was not performed; authenticated rendering and access are covered by isolated test fixtures. No development-user privileges changed and no privilege-grant attempt was made. Browser E2E automation remains TASK-045.
 - Hosted CI and Desktop MY_PROJECT sync/hash verification follow. Next: TASK-014 dashboard integration tests. Normal Web host remains running at http://127.0.0.1:5015/ .
 - TASK-013 hosted CI passed every step: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40412892234 . Feature commit 9c1bdd4 is published on main. Desktop MY_PROJECT refreshed and all 138 portable files matched SHA-256 hashes; final memory copied after this entry. Existing action runtime notices remain non-blocking CI maintenance.
+
+### 2026-10-27 - TASK-014 dashboard integration tests
+
+- Audited existing anonymous and role-specific dashboard/tool route matrix and placeholder assertions; retained those tests rather than duplicating their implementation.
+- Added 7 real HTTP/PostgreSQL cases: two-customer profile isolation against userId/customerId query tampering, blank-profile fallback welcome/future-order state, safe missing-profile failure/retry, and post-logout login challenges for customer/manager/admin dashboards.
+- Two independent cookie clients receive only their own display names despite requesting the other account ID. Tests use the dedicated _tests DB and clean their own fixture records; no development-user privileges or data changed.
+- Formatting passed; final Release build passed; all 115 tests passed (1 Domain, 38 Application, 76 HTTP/database), zero failures/skips. Initial build was blocked by the existing preview's DLL locks; stopped the workspace-owned Web host and reran verification successfully.
+- Test-only change: SessionHttpTests.cs plus documentation/task records. No production behavior, dependency, schema or migration changes. No new manual visual QA; browser E2E remains TASK-045 and manager/admin visual QA is still outstanding.
+- Order-history data isolation remains tied to TASK-023; assigned-restaurant isolation remains TASK-025. Their current placeholders do not claim those features are implemented. TEST_PLAN.md maps each TASK-014 requirement to verified current coverage.
+- Hosted CI and Desktop MY_PROJECT sync/hash verification follow. Next: TASK-015 restaurant domain entities; Phase 4 begins. Development preview will be restarted after verification.

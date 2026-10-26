@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-014 - Add dashboard integration tests
+TASK-015 - Create restaurant domain entities
 ```
 
 
@@ -217,3 +217,5 @@ Manager-role users can open /manager. Restaurant setup, menu and orders links le
 ## Admin dashboard (TASK-013)
 
 Admin-role users can open /admin with links to protected restaurant/user management placeholders. Pending restaurant counts are not connected. Actual approval and user administration remain TASK-033/034; no default Admin account, role-grant endpoint or management mutation is introduced.
+
+Dashboard integration coverage (TASK-014) verifies role access, logout challenges, placeholder states, safe missing-profile feedback and two-customer greeting isolation. Real order/restaurant data coverage follows the corresponding feature tasks.

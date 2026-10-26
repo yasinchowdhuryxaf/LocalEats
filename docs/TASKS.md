@@ -243,10 +243,10 @@ Acceptance criteria:
 
 ## TASK-014: Add dashboard integration tests
 
-- [ ] Test redirects for logged-out users.
-- [ ] Test role-specific dashboard access.
-- [ ] Test empty states.
-- [ ] Test that one user cannot view another user’s private dashboard data.
+- [x] Test redirects for logged-out users.
+- [x] Test role-specific dashboard access.
+- [x] Test empty states.
+- [x] Test that one user cannot view another user’s private dashboard data.
 
 # Phase 4: Restaurant Directory and Menu Browsing
 
@@ -706,12 +706,12 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 ## Current Work
 
-- Current phase: Phase 3 - Customer Dashboard
-- Current task: TASK-014
-- Branch: `codex/task-013-admin-dashboard`
+- Current phase: Phase 4 - Restaurant Directory and Menu Browsing
+- Current task: TASK-015
+- Branch: `codex/task-014-dashboard-tests`
 - Status: [ ] Not started
-- Last completed task: TASK-013 - Build the admin dashboard
-- Next task: TASK-014 - Add dashboard integration tests
+- Last completed task: TASK-014 - Add dashboard integration tests
+- Next task: TASK-015 - Create restaurant domain entities
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

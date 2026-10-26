@@ -35,7 +35,7 @@ The three primary actor areas are:
 - Backend: ASP.NET Core.
 - Database: PostgreSQL.
 - ORM: Entity Framework Core with Npgsql.
-- Authentication: ASP.NET Core Identity or an approved managed provider.
+- Authentication: ASP.NET Core Identity.
 - Architecture: Modular monolith.
 - Testing: xUnit, integration tests with PostgreSQL, and Playwright for critical flows.
 
@@ -148,7 +148,7 @@ If a decision changes, create an ADR and update this file.
 
 The following decisions must be answered before the relevant implementation task:
 
-- [ ] Exact .NET SDK version.
+- [x] SDK minimum 10.0.402 in global.json with latestFeature roll-forward; local checks used installed 10.0.403.
 - [ ] Delivery, pickup, or both for the first release.
 - [ ] Initial city or service area.
 - [ ] Whether customers can browse before login.
@@ -168,7 +168,7 @@ Do not silently guess a business policy when one of these decisions affects data
 - The solution exists and builds; dependency security advisories remain visible.
 - Documentation is present under docs/.
 - Local PostgreSQL migration, seed data and health endpoints verified on 2026-10-27.
-- No test database setup exists yet.
+- Dedicated localeats_registration_tests database and ephemeral CI PostgreSQL setup exist; later business workflows still need their feature tests.
 - No preset development user accounts are created; development roles exist.
 - No design tokens have been implemented in CSS or Blazor components.
 - No hosting provider has been selected.
@@ -377,3 +377,6 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Added 13 Application security cases, 12 HTTP role/anonymous-route cases, and a real PostgreSQL changed-order-ID isolation test. Existing account/session tests remain. Final formatting passed; Release build passed with zero warnings/errors; all 59 tests passed (1 Domain, 28 Application, 30 API/HTTP/database), no failures/skips. Hosted CI follows.
 - Added docs/PERMISSIONS.md with the exact role matrix, ownership rules and deferred assignment/revocation integration. No schema change, migration, new dependency, privileged seed account or public role-grant endpoint was introduced.
 - Next task: TASK-009 account page. Branch: codex/task-008-authorization. Portable copy refresh follows final checks.
+
+- TASK-008 hosted CI passed every step, including the role matrix and PostgreSQL order ownership isolation tests: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40407175133 . Feature commit 6332327 is published on main.
+- Desktop MY_PROJECT refreshed; all 119 portable files matched SHA-256 hashes. Final memory copied after this entry. The normal local development Web host is running at http://127.0.0.1:5015/login . No production data or real user privileges were changed; test fixtures cleaned their own disposable records.

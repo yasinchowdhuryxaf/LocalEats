@@ -753,3 +753,5 @@ TASK-017: Web SSR GET directory → Application RestaurantDirectoryService → I
 TASK-018: restaurant details/menu use Web static SSR → RestaurantMenuService → IRestaurantMenuReader → projected SQL. Metadata lookup is visibility-scoped before menu reads; active-category items are paged in batches of 20. Non-streamed rendering keeps correct 404/503 responses. Sample display currency is BDT; payment/checkout remain out of scope.
 
 TASK-019: static SSR basket POST → Application BasketService/locked BasketState → Infrastructure canonical product reader. Web SessionBasketStore binds temporary in-process cache state to the protected browser session ID. No database basket or interactive global render mode is added. See docs/decisions/0003-browser-session-basket.md for lifetime, limits and future shared-store requirements.
+
+TASK-020: /basket is a static SSR view over the existing session BasketService. Page handlers map transport action values to the same Application operations; no new persistence, API or checkout use case is introduced.

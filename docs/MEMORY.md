@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-019 basket state complete. TASK-020 dedicated basket page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-020 dedicated basket page complete. TASK-021 checkout page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-020 - Build basket page (not started)**
+**TASK-021 - Build checkout page (not started)**
 
 ### Current task objective
 
-Build the dedicated basket page in TASK-020 using the existing basket service; checkout remains later. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Build the checkout page in TASK-021; transactional order creation remains TASK-022. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-019 complete. TASK-020 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-020 complete. TASK-021 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-020 - Build basket page.
-2. TASK-021 - Build checkout page.
+1. TASK-021 - Build checkout page.
+2. TASK-022 - Create order transaction.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-020: Build basket page.
-Implement only the basket page; do not implement checkout or manager tools.
+We are starting TASK-021: Build checkout page.
+Implement only checkout-page scope; do not implement transactional orders or manager tools.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -506,3 +506,12 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - User explicitly chose to KEEP Dhaka Bites status unchanged. Neither existing restaurant status/data was modified. Live localhost demonstrates empty basket, header Basket (0) and closed-item disabled control; open-item workflows were exercised only in isolated fixtures. Checked empty preview at 375/768 without horizontal overflow. Screenshot outputs/basket-state.png is ignored generated proof; menu tab remains a deliverable at http://127.0.0.1:5015/restaurants/dhaka-bites .
 - No ARAM PROJECT resource accessed or changed. Dedicated /basket page is not implemented yet (TASK-020); no checkout/order creation is claimed. Hosted CI and MY_PROJECT sync/hash verification follow.
 - TASK-019 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40767846829 . Feature commit 39d2182 is published on main. Desktop MY_PROJECT refreshed; all 170 portable files matched SHA-256 hashes. Final memory copied after this entry. Live empty/closed basket preview remains at http://127.0.0.1:5015/restaurants/dhaka-bites . User-requested sample statuses remain unchanged; existing action-runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - TASK-020 dedicated basket page
+
+- Added public /basket using the existing session-scoped BasketService. Shows restaurant, item names, unit prices, quantities, line totals and BDT display subtotal. Provides increase/decrease/remove/clear via antiforgery-protected SSR POST/redirect/GET; no business rules were duplicated in the page.
+- Header Basket count is now a /basket link; menu preview includes View full basket. Empty page offers a directory action. Layout stacks on mobile and uses item/summary columns for filled desktop baskets.
+- Checkout action is intentionally a disabled Coming soon button with explicit no-order/payment message. TASK-021 checkout and TASK-022 order persistence are not implemented or claimed. Existing temporary basket lifetime, limits, server price/availability checks, isolation and no-store policy remain unchanged.
+- Added 3 real HTTP/PostgreSQL cases for empty/no-store page, filled prices/totals/quantity/remove/clear/isolation/disabled checkout, and missing-antiforgery rejection. Final format verification passed; Release build passed with zero warnings/errors; all 162 tests passed (8 Domain, 46 Application, 108 HTTP/database), zero failures/skips. Both local health endpoints returned 200.
+- Demonstrated menu → View full basket at localhost. Empty page fits at 375/1440 without horizontal overflow. Filled flows verified only with isolated fixtures, preserving the user's explicit closed-sample choice. No existing restaurant or user data changed. Browser tab remains a visible deliverable at http://127.0.0.1:5015/basket ; screenshot outputs/basket-page.png is ignored generated proof.
+- Changed BasketPage.razor/CSS, header/menu links, HTTP tests and documentation. No new dependency, schema, migration or ARAM PROJECT access/change. Hosted CI and MY_PROJECT sync/hash verification follow. Next TASK-021.

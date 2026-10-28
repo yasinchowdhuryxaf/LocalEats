@@ -69,6 +69,7 @@
 {
 <section id="menu-basket" class="restaurant-menu basket-preview" aria-labelledby="basket-heading">
     <h2 id="basket-heading">Your basket</h2>
+    <p><a href="/basket">View full basket</a></p>
     @if (basketMessage is not null) { <p role="status">@basketMessage</p> }
     @if (snapshot.Lines.Count == 0)
     {

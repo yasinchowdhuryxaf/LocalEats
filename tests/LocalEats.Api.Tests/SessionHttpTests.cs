@@ -25,6 +25,61 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
 
+    [Fact]
+    public async Task BasketPage_EmptyGuest_ShowsBrowseActionAndNoStore()
+    {
+        using var client = Client();
+        var response = await client.GetAsync("/basket");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Your basket is empty", html);
+        Assert.Contains("Find restaurants", html);
+    }
+
+    [Fact]
+    public async Task BasketPage_Filled_UpdatesTotalsAndClearsWithoutLeakingToOtherClient()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        var id = await MenuItemId(slug);
+        using var client = Client();
+        using var other = Client();
+        await AddBasketItem(client, slug, id);
+        var html = await client.GetStringAsync("/basket");
+        Assert.Contains("Private menu fixture", html);
+        Assert.Contains("Menu item 01", html);
+        Assert.Contains("Unit price: BDT 123.46", html);
+        Assert.Contains("Display subtotal: BDT 123.46", html);
+        Assert.Matches("<button[^>]*disabled[^>]*>Checkout", html);
+        Assert.DoesNotContain("Private menu fixture", await other.GetStringAsync("/basket"));
+        foreach (var operation in new[] { $"increase:{id}", $"decrease:{id}", $"remove:{id}" })
+        {
+            var fields = await BasketFields(client, "/basket", "basket-page");
+            fields["Input.Operation"] = operation;
+            var response = await client.PostAsync("/basket", new FormUrlEncodedContent(fields));
+            Assert.Equal("/basket", response.Headers.Location?.ToString());
+            html = await client.GetStringAsync("/basket");
+            Assert.Contains(operation.StartsWith("increase", StringComparison.Ordinal) ? "BDT 246.92" : operation.StartsWith("decrease", StringComparison.Ordinal) ? "BDT 123.46" : "Your basket is empty", html);
+        }
+        await AddBasketItem(client, slug, id);
+        var clear = await BasketFields(client, "/basket", "basket-page");
+        clear["Input.Operation"] = "clear";
+        await client.PostAsync("/basket", new FormUrlEncodedContent(clear));
+        Assert.Contains("Your basket is empty", await client.GetStringAsync("/basket"));
+    }
+
+    [Fact]
+    public async Task BasketPage_PostWithoutToken_IsRejected()
+    {
+        using var client = Client();
+        var response = await client.PostAsync("/basket", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["_handler"] = "basket-page",
+            ["Input.Operation"] = "clear"
+        }));
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private async Task<Guid> MenuItemId(string slug, int number = 1)
     {
         await using var scope = Factory.Services.CreateAsyncScope();

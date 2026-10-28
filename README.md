@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-020 - Build basket page
+TASK-021 - Build checkout page
 ```
 
 
@@ -235,4 +235,8 @@ Open /restaurants and choose View menu. Public restaurant details show active me
 
 ## Basket state (TASK-019)
 
-Open a restaurant menu to see the basket preview and header count. Available items at open restaurants support add/increase/decrease/remove/clear; one restaurant per basket. Current development samples remain closed at the user's request, so their add controls stay disabled. The temporary basket expires after 30 minutes inactivity or restart and clears on logout. Dedicated /basket page is TASK-020; checkout is not implemented. See ADR 0003 for limits and hosting assumptions.
+Open a restaurant menu to see the basket preview and header count. Available items at open restaurants support add/increase/decrease/remove/clear; one restaurant per basket. Current development samples remain closed at the user's request, so their add controls stay disabled. The temporary basket expires after 30 minutes inactivity or restart and clears on logout. The dedicated /basket page is available; checkout is not implemented. See ADR 0003 for limits and hosting assumptions.
+
+## Basket page (TASK-020)
+
+Open http://127.0.0.1:5015/basket or use the header basket link. Filled baskets show item quantities, prices, line totals, display subtotal and update/remove/clear controls; empty baskets link to restaurants. Checkout is a disabled upcoming action until TASK-021. Restaurant statuses remain unchanged.

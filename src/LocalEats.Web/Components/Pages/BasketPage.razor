@@ -1,0 +1,96 @@
+@page "/basket"
+@using System.Globalization
+@using LocalEats.Application.Basket
+@inject BasketService Basket
+@inject ILogger<BasketPage> Logger
+
+<PageTitle>Your basket | LocalEats</PageTitle>
+<section class="basket-page" aria-labelledby="basket-title">
+    <a href="/restaurants">← Browse restaurants</a>
+    <h1 id="basket-title">Your basket</h1>
+    @if (message is not null) { <p role="status">@message</p> }
+    @if (snapshot.Lines.Count == 0)
+    {
+        <section class="basket-panel"><h2>Your basket is empty</h2><p>Find an open restaurant and add an available item to get started.</p><a class="button-link" href="/restaurants">Find restaurants</a></section>
+    }
+    else
+    {
+        <p>From <strong>@snapshot.Lines[0].RestaurantName</strong></p>
+        <div class="basket-layout">
+            <section class="basket-panel" aria-label="Basket items">
+                <EditForm Model="Input" OnSubmit="UpdateAsync" FormName="basket-page" Enhance="false">
+                    @foreach (var line in snapshot.Lines)
+                    {
+                        <article class="basket-row">
+                            <h2>@line.Name</h2>
+                            <p>Unit price: BDT @Money(line.PriceMinor)</p>
+                            <p>Quantity: @line.Quantity · Line total: BDT @Money(line.TotalMinor)</p>
+                            <div class="basket-actions">
+                                <button type="submit" name="Input.Operation" value="@($"decrease:{line.ItemId}")" aria-label="Decrease quantity of @line.Name">−</button>
+                                <button type="submit" name="Input.Operation" value="@($"increase:{line.ItemId}")" aria-label="Increase quantity of @line.Name">+</button>
+                                <button type="submit" name="Input.Operation" value="@($"remove:{line.ItemId}")">Remove @line.Name</button>
+                            </div>
+                        </article>
+                    }
+                    <button type="submit" name="Input.Operation" value="clear">Clear basket</button>
+                </EditForm>
+            </section>
+            <aside class="basket-panel basket-summary" aria-labelledby="summary-title">
+                <h2 id="summary-title">Basket summary</h2>
+                <p>@snapshot.ItemCount items</p>
+                <p><strong>Display subtotal: BDT @Money(snapshot.SubtotalMinor)</strong></p>
+                <p>Prices and availability will be checked again at checkout. Delivery fees are not included.</p>
+                <button type="button" disabled>Checkout — coming soon</button>
+                <p>Checkout is not available yet. No order or payment will be submitted.</p>
+            </aside>
+        </div>
+    }
+    <p class="basket-hint">This temporary browser basket expires after 30 minutes of inactivity or an app restart. Maximum 20 per item and 50 different items.</p>
+</section>
+
+@code {
+    [SupplyParameterFromForm] public BasketPageInput Input { get; set; }
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    private BasketSnapshot snapshot = new([]);
+    private string? message;
+    public BasketPage() => Input = new();
+    public sealed class BasketPageInput { public string Operation { get; set; } = string.Empty; }
+    private static string Money(long minor) => (minor / 100m).ToString("N2", CultureInfo.InvariantCulture);
+
+    protected override void OnInitialized()
+    {
+        Input ??= new();
+        snapshot = Basket.Snapshot();
+        message = HttpContext?.Session.GetString("BasketMessage");
+        HttpContext?.Session.Remove("BasketMessage");
+    }
+
+    private async Task UpdateAsync()
+    {
+        var operation = Input.Operation ?? string.Empty;
+        BasketChange result = new(false, "Choose a valid basket action.");
+        try
+        {
+            if (operation == "clear") result = Basket.Clear();
+            else if (operation.Length <= 64)
+            {
+                var parts = operation.Split(':', 2);
+                if (parts.Length == 2 && Guid.TryParse(parts[1], out var id))
+                    result = parts[0] switch
+                    {
+                        "increase" => await Basket.IncreaseAsync(id),
+                        "decrease" => Basket.Decrease(id),
+                        "remove" => Basket.Remove(id),
+                        _ => result
+                    };
+            }
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Basket page update failed with error type {ErrorType}.", exception.GetType().Name);
+            result = new(false, "We couldn’t update your basket. Please try again.");
+        }
+        HttpContext?.Session.SetString("BasketMessage", result.Message);
+        HttpContext?.Response.Redirect("/basket");
+    }
+}

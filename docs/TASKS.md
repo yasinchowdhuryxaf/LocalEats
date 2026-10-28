@@ -308,11 +308,11 @@ Goal: allow a customer to create a valid order from one restaurant.
 
 ## TASK-020: Build basket page
 
-- [ ] Create `/basket`.
-- [ ] Show restaurant name and basket items.
-- [ ] Show quantities, line totals, and subtotal.
-- [ ] Add checkout action.
-- [ ] Add mobile layout.
+- [x] Create `/basket`.
+- [x] Show restaurant name and basket items.
+- [x] Show quantities, line totals, and subtotal.
+- [x] Add checkout action.
+- [x] Add mobile layout.
 
 ## TASK-021: Build checkout page
 
@@ -686,7 +686,7 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 - [x] Customer can browse restaurants.
 - [x] Customer can view a menu.
-- [ ] Customer can use the basket.
+- [x] Customer can use the basket.
 - [ ] Customer can place a cash/pickup order.
 
 ## Milestone 4: Restaurant operations complete
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 5 - Basket and Order Creation
-- Current task: TASK-020
-- Branch: `codex/task-019-basket-state`
+- Current task: TASK-021
+- Branch: `codex/task-020-basket-page`
 - Status: [ ] Not started
-- Last completed task: TASK-019 - Implement basket state
-- Next task: TASK-020 - Build basket page
+- Last completed task: TASK-020 - Build basket page
+- Next task: TASK-021 - Build checkout page
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

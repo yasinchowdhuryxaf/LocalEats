@@ -87,4 +87,4 @@ Database endpoint: 127.0.0.1:15432. Use the LocalEats Compose service; do not ch
 
 EF tools require the explicit LocalEats ConnectionStrings__DefaultConnection shown in README.md. Missing or unrelated endpoints are refused before connecting. See docs/SEED_DATA.md for repeatable development-only sample behavior.
 
-Current milestone: TASK-001 through TASK-016 complete. Next is TASK-017 restaurant directory. Existing sample data is preserved; a fresh development database receives the catalog described in docs/SEED_DATA.md.
+Current milestone: TASK-001 through TASK-017 complete. Next is TASK-018 restaurant detail and menu. Existing sample data is preserved; a fresh development database receives the catalog described in docs/SEED_DATA.md.

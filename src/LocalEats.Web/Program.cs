@@ -15,6 +15,7 @@ builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<ProfileService>();
 builder.Services.AddScoped<RestaurantDirectoryService>();
+builder.Services.AddScoped<RestaurantMenuService>();
 if (!builder.Environment.IsDevelopment())
 {
     builder.Services.ConfigureApplicationCookie(options =>

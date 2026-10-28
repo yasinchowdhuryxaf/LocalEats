@@ -10,7 +10,7 @@
         <p class="eyebrow">Good food, close to home</p>
         <h1 id="directory-heading">Find your neighborhood favorites.</h1>
         <p>Explore local restaurants by name, area, or cuisine.</p>
-        <p class="directory-note">Development sample catalog · Menus and ordering are coming in the next phases.</p>
+        <p class="directory-note">Sample restaurant catalog · Browse menus. Ordering is coming soon.</p>
     </header>
     <form action="/restaurants" method="get" class="directory-filters" aria-label="Restaurant filters">
         <div><label for="search-name">Restaurant name</label><input id="search-name" name="q" value="@Search" maxlength="160" placeholder="Try Dhaka Bites" /></div>
@@ -46,7 +46,7 @@
                             <h2>@restaurant.Name</h2>
                             <p class="restaurant-meta">@(restaurant.Cuisine ?? "Cuisine to be added") · @(restaurant.Area ?? "Area to be added")</p>
                             <p>@restaurant.Description</p>
-                            <p class="menu-note">Menu coming soon</p>
+                            <a href="@($"/restaurants/{Uri.EscapeDataString(restaurant.Slug)}")">View menu</a>
                         </div>
                     </article>
                 }

@@ -36,3 +36,5 @@ This task provides no public role-grant endpoint, default admin accounts, manage
 HTTP tests exercise the complete 3×3 role/page matrix and anonymous route access using real Identity cookies. Application tests cover malformed/unauthenticated role claims, ownership mismatch and missing records. A PostgreSQL integration test proves that changing an order ID denies a Customer while explicit Admin access is allowed. Test data is isolated in the dedicated `_tests` database and cleaned by its owning fixture.
 
 The /restaurants directory is public for all actors. Its Infrastructure reader always scopes to approved/active/non-deleted records, regardless of caller role or filter values. No private owner/user fields are projected.
+
+TASK-018: /restaurants/{slug} is public only for approved/active/non-deleted restaurants. Unknown/private/invalid slugs return the same 404 screen, without leaking restaurant or item data. Only active categories are projected. Unavailable items remain visible with disabled controls; no basket-add endpoint exists yet.

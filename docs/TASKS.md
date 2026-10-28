@@ -280,11 +280,11 @@ Foundation entities were introduced during TASK-003. This task remains open for 
 
 ## TASK-018: Build restaurant detail and menu page
 
-- [ ] Create `/restaurants/{slug}`.
-- [ ] Show restaurant information and opening status.
-- [ ] Show categories and available menu items.
-- [ ] Show unavailable items clearly.
-- [ ] Add `Add to basket` placeholder behavior.
+- [x] Create `/restaurants/{slug}`.
+- [x] Show restaurant information and opening status.
+- [x] Show categories and available menu items.
+- [x] Show unavailable items clearly.
+- [x] Add `Add to basket` placeholder behavior.
 
 Tests:
 
@@ -684,8 +684,8 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 ## Milestone 3: First useful customer experience
 
-- [ ] Customer can browse restaurants.
-- [ ] Customer can view a menu.
+- [x] Customer can browse restaurants.
+- [x] Customer can view a menu.
 - [ ] Customer can use the basket.
 - [ ] Customer can place a cash/pickup order.
 
@@ -706,12 +706,12 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 ## Current Work
 
-- Current phase: Phase 4 - Restaurant Directory and Menu Browsing
-- Current task: TASK-018
-- Branch: `codex/task-017-restaurant-directory`
+- Current phase: Phase 5 - Basket and Order Creation
+- Current task: TASK-019
+- Branch: `codex/task-018-restaurant-menu`
 - Status: [ ] Not started
-- Last completed task: TASK-017 - Build restaurant directory
-- Next task: TASK-018 - Build restaurant detail and menu page
+- Last completed task: TASK-018 - Build restaurant detail and menu page
+- Next task: TASK-019 - Implement basket state
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

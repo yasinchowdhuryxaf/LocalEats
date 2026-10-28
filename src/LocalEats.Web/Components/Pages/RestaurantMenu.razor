@@ -1,0 +1,89 @@
+@page "/restaurants/{Slug}"
+@using System.Globalization
+@using LocalEats.Application.Restaurants
+@inject RestaurantMenuService Menus
+@inject ILogger<RestaurantMenu> Logger
+
+<PageTitle>@(menu?.Name ?? "Restaurant") | LocalEats</PageTitle>
+<section class="restaurant-menu">
+    <a href="/restaurants">← All restaurants</a>
+    @if (failed)
+    {
+        <h1>Unable to load this menu</h1>
+        <p role="alert">We couldn’t load the menu. Please try again.</p>
+        <a href="@MenuUrl(Page)">Try again</a>
+    }
+    else if (menu is null)
+    {
+        <h1>Restaurant not found</h1>
+        <p>This restaurant is not available. Browse the directory to find another restaurant.</p>
+    }
+    else
+    {
+        <header class="menu-intro">
+            <p class="eyebrow">@(menu.IsOpen ? "Open" : "Closed") · @(menu.Cuisine ?? "Cuisine to be added")</p>
+            <h1>@menu.Name</h1>
+            <p>@menu.Description</p>
+            <p>@(menu.Address ?? "Address to be added") · @(menu.Area ?? "Area to be added")</p>
+            @if (!menu.IsOpen) { <p class="menu-notice">This restaurant is currently closed. You can still browse its menu.</p> }
+            <p>Menu preview · Ordering is not available yet.</p>
+        </header>
+        @if (menu.Items.Count == 0)
+        {
+            <section class="menu-empty"><h2>Menu coming soon</h2><p>This restaurant has no published menu items yet. Please check back later.</p></section>
+        }
+        else
+        {
+            @foreach (var category in menu.Items.GroupBy(item => item.CategoryId))
+            {
+                <section class="menu-category" aria-label="@category.First().Category">
+                    <h2>@category.First().Category</h2>
+                    <div class="menu-grid">
+                    @foreach (var item in category)
+                    {
+                        <article class="menu-item">
+                            <h3>@item.Name</h3>
+                            <p>@item.Description</p>
+                            <p class="menu-price">BDT @((item.PriceMinor / 100m).ToString("N2", CultureInfo.InvariantCulture))</p>
+                            @if (!item.IsAvailable) { <p class="menu-availability">Currently unavailable</p> }
+                            <button type="button" disabled title="Ordering is not available yet">@(!item.IsAvailable ? "Unavailable" : !menu.IsOpen ? "Restaurant closed" : "Add to basket (coming soon)")</button>
+                        </article>
+                    }
+                    </div>
+                </section>
+            }
+            <nav class="menu-pagination" aria-label="Menu pages">
+                @if (menu.Page > 1) { <a href="@MenuUrl(menu.Page - 1)">Previous</a> }
+                <span aria-current="page">Page @menu.Page of @menu.TotalPages</span>
+                @if (menu.Page < menu.TotalPages) { <a href="@MenuUrl(menu.Page + 1)">Next</a> }
+            </nav>
+        }
+    }
+</section>
+
+@code {
+    [Parameter] public string Slug { get; set; } = string.Empty;
+    [SupplyParameterFromQuery(Name = "page")] public string? PageInput { get; set; }
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    private int Page => int.TryParse(PageInput, out var page) ? page : 1;
+    private RestaurantMenuPage? menu;
+    private bool failed;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        try
+        {
+            failed = false;
+            menu = await Menus.GetAsync(Slug, Page, HttpContext?.RequestAborted ?? CancellationToken.None);
+            if (menu is null && HttpContext?.Response.HasStarted == false) HttpContext.Response.StatusCode = 404;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Menu load failed with error type {ErrorType}.", exception.GetType().Name);
+            failed = true;
+            if (HttpContext?.Response.HasStarted == false) HttpContext.Response.StatusCode = 503;
+        }
+    }
+
+    private string MenuUrl(int page) => $"/restaurants/{Uri.EscapeDataString(Slug)}?page={Math.Max(1, page)}";
+}

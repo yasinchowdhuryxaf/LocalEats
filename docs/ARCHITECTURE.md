@@ -749,3 +749,5 @@ Restaurant persists the existing IsApproved/IsActive flags, optional Address (50
 TASK-016: development sample inserts are atomic and serialized by a PostgreSQL advisory transaction lock, matched by sample slug and never overwrite existing rows. See docs/SEED_DATA.md. Design-time EF tooling requires the explicitly isolated LocalEats endpoint; production migration tooling is a separate deployment concern.
 
 TASK-017: Web SSR GET directory → Application RestaurantDirectoryService → IRestaurantDirectoryReader → Infrastructure projected SQL query. Filtering and pagination execute server-side; no EF types/database queries are placed in components. No additional HTTP API is introduced for this slice.
+
+TASK-018: restaurant details/menu use Web static SSR → RestaurantMenuService → IRestaurantMenuReader → projected SQL. Metadata lookup is visibility-scoped before menu reads; active-category items are paged in batches of 20. Non-streamed rendering keeps correct 404/503 responses. Sample display currency is BDT; payment/checkout remain out of scope.

@@ -1,0 +1,13 @@
+.restaurant-menu { max-width: 960px; margin-inline: auto; overflow-wrap: anywhere; }
+.menu-intro { margin-block: var(--space-8); padding: var(--space-6); background: var(--brand-50); border: 1px solid var(--brand-100); border-radius: var(--radius-card); }
+.menu-intro h1 { margin-block: var(--space-3); }
+.menu-notice { padding: var(--space-3); background: var(--warning-50); border: 1px solid var(--neutral-200); border-radius: var(--radius-control); }
+.menu-category { margin-top: var(--space-8); }
+.menu-grid { display: grid; gap: var(--space-6); }
+.menu-item, .menu-empty { padding: var(--space-6); border: 1px solid var(--neutral-200); border-radius: var(--radius-card); background: var(--neutral-0); }
+.menu-item h3 { margin-top: 0; }
+.menu-price { font-weight: 700; }
+.menu-availability { font-weight: 600; color: var(--neutral-700); }
+.menu-item button { width: 100%; padding: var(--space-3); color: var(--neutral-700); background: var(--neutral-100); border: 1px solid var(--neutral-200); border-radius: var(--radius-control); }
+.menu-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-6); margin-top: var(--space-8); }
+@media (min-width: 768px) { .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -25,6 +25,138 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
 
+    private async Task<string> CreateMenuFixtureAsync(string state, int itemCount)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var row = new Restaurant
+        {
+            Id = Guid.NewGuid(),
+            Slug = $"menu-{Guid.NewGuid():N}",
+            Name = "Private menu fixture",
+            Address = "Sample road",
+            Area = "North",
+            Cuisine = "Rice",
+            IsApproved = state != "unapproved",
+            IsActive = state != "inactive",
+            IsOpen = state != "closed",
+            DeletedAt = state == "deleted" ? DateTimeOffset.UtcNow : null,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        var category = new MenuCategory
+        {
+            Id = Guid.NewGuid(),
+            Name = "Meals",
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        for (var i = 0; i < itemCount; i++)
+            category.Items.Add(new MenuItem
+            {
+                Id = Guid.NewGuid(),
+                Name = $"Menu item {i:D2}",
+                PriceMinor = 12345 + i,
+                IsAvailable = i != 0,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow
+            });
+        row.Categories.Add(category);
+        row.Categories.Add(new MenuCategory
+        {
+            Id = Guid.NewGuid(),
+            Name = "Hidden category",
+            IsActive = false,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            Items = [new MenuItem { Id = Guid.NewGuid(), Name = "Hidden item", PriceMinor = 100, IsAvailable = true,
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }]
+        });
+        directoryIds.Add(row.Id);
+        db.Restaurants.Add(row);
+        await db.SaveChangesAsync();
+        return row.Slug;
+    }
+
+    [Fact]
+    public async Task Menu_Public_PaginatesAndDisablesUnavailablePlaceholders()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 21);
+        using var client = Client();
+        var html = await client.GetStringAsync($"/restaurants/{slug}");
+        Assert.Contains("Sample road", html);
+        Assert.Contains("Meals", html);
+        Assert.Contains("Menu item 00", html);
+        Assert.Contains("BDT 123.45", html);
+        Assert.Contains("Currently unavailable", html);
+        Assert.Matches("<button[^>]*disabled[^>]*>Unavailable</button>", html);
+        Assert.Matches("<button[^>]*disabled[^>]*>Add to basket \\(coming soon\\)</button>", html);
+        Assert.DoesNotContain("Hidden category", html);
+        Assert.DoesNotContain("Hidden item", html);
+        Assert.DoesNotContain("Menu item 20", html);
+        var last = await client.GetStringAsync($"/restaurants/{slug}?page=2147483647");
+        Assert.Contains("Page 2 of 2", last);
+        Assert.Contains("Menu item 20", last);
+        Assert.DoesNotContain("Menu item 00", last);
+    }
+
+    [Theory]
+    [InlineData("unapproved")]
+    [InlineData("inactive")]
+    [InlineData("deleted")]
+    [InlineData("missing")]
+    public async Task Menu_NonPublicOrMissing_ReturnsIndistinguishableNotFound(string state)
+    {
+        var slug = state == "missing" ? $"missing-{Guid.NewGuid():N}" : await CreateMenuFixtureAsync(state, 1);
+        using var client = Client();
+        var response = await client.GetAsync($"/restaurants/{slug}");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Restaurant not found", html);
+        Assert.DoesNotContain("Private menu fixture", html);
+        Assert.DoesNotContain("Menu item", html);
+    }
+
+    [Fact]
+    public async Task Menu_ClosedAndEmpty_ShowsBrowseNoticeAndEmptyState()
+    {
+        var slug = await CreateMenuFixtureAsync("closed", 0);
+        using var client = Client();
+        var html = await client.GetStringAsync($"/restaurants/{slug}?page=invalid");
+        Assert.Contains("This restaurant is currently closed", html);
+        Assert.Contains("Menu coming soon", html);
+        Assert.DoesNotContain("Hidden item", html);
+    }
+
+    [Fact]
+    public async Task Menu_InvalidSlug_ReturnsSafeNotFound()
+    {
+        using var client = Client();
+        var response = await client.GetAsync("/restaurants/bad_slug");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains("Restaurant not found", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Menu_ReadFailure_ShowsSafeRetry()
+    {
+        await using var failing = Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddScoped<IRestaurantMenuReader>(_ => new FailingMenuReader())));
+        using var client = failing.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        var response = await client.GetAsync("/restaurants/example");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        Assert.Contains("We couldn’t load the menu. Please try again.", html);
+        Assert.DoesNotContain("sensitive-menu-detail", html);
+    }
+
+    private sealed class FailingMenuReader : IRestaurantMenuReader
+    {
+        public Task<RestaurantMenuPage?> GetAsync(string slug, int page, int pageSize, CancellationToken cancellationToken = default)
+            => Task.FromException<RestaurantMenuPage?>(new InvalidOperationException("sensitive-menu-detail"));
+    }
+
     [Theory]
     [InlineData("not-a-number")]
     [InlineData("-1")]

@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-018 - Build restaurant detail and menu page
+TASK-019 - Implement basket state
 ```
 
 
@@ -209,7 +209,7 @@ After signing in, open `/account` or select Your account from `/session`. Email 
 
 ## Customer dashboard (TASK-011)
 
-Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens the public directory; menus, ordering and order history remain later tasks. Explicit safe local login return URLs remain honored.
+Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens the public directory; menus are available, while ordering and order history remain later tasks. Explicit safe local login return URLs remain honored.
 
 ## Manager dashboard (TASK-012)
 
@@ -227,4 +227,8 @@ EF tooling requires an explicitly configured 127.0.0.1:15432/localeats endpoint 
 
 ## Restaurant directory (TASK-017)
 
-Open http://127.0.0.1:5015/restaurants. Search by name, filter by exact area/cuisine, and page through six results at a time. Only approved, active, non-deleted restaurants are public; closed ones remain browseable. Menu pages are TASK-018. Sample cards use decorative placeholders until image storage is decided.
+Open http://127.0.0.1:5015/restaurants. Search by name, filter by exact area/cuisine, and page through six results at a time. Only approved, active, non-deleted restaurants are public; closed ones remain browseable. Choose View menu to open restaurant details and category/items. Sample cards use decorative placeholders until image storage is decided.
+
+## Restaurant menus (TASK-018)
+
+Open /restaurants and choose View menu. Public restaurant details show active menu categories, BDT sample prices, availability and closed status. Menus paginate 20 items at a time. Missing/private restaurants return safe 404s. Basket controls are disabled placeholders until TASK-019. No payment or order creation is implemented.

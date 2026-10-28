@@ -27,7 +27,7 @@ public sealed class RestaurantDirectoryReader(LocalEatsDbContext db) : IRestaura
         var pages = (int)Math.Max(1, ((long)total + pageSize - 1) / pageSize);
         var page = Math.Clamp(query.Page, 1, pages);
         var items = await rows.OrderBy(row => row.Name).ThenBy(row => row.Id).Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(row => new RestaurantCard(row.Id, row.Name, row.Description, row.Area, row.Cuisine, row.IsOpen))
+            .Select(row => new RestaurantCard(row.Id, row.Name, row.Description, row.Area, row.Cuisine, row.IsOpen, row.Slug))
             .ToListAsync(cancellationToken);
         return new RestaurantDirectoryResult(items, total, page, pageSize);
     }

@@ -18,6 +18,7 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.AddScoped<IRestaurantDirectoryReader, RestaurantDirectoryReader>();
+        services.AddScoped<IRestaurantMenuReader, RestaurantMenuReader>();
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
 

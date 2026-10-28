@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-017 restaurant directory complete. TASK-018 restaurant detail/menu page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-018 restaurant details/menu complete. TASK-019 basket state is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -108,24 +108,24 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current phase
 
-**Phase 4 - Restaurant Directory and Menu Browsing**
+**Phase 5 - Basket and Order Creation**
 
 ### Current task
 
-**TASK-018 - Build restaurant detail and menu page (not started)**
+**TASK-019 - Implement basket state (not started)**
 
 ### Current task objective
 
-Build the public restaurant detail/menu page in TASK-018; preserve visibility and availability checks. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Implement basket state in TASK-019 with one-restaurant and availability rules; do not implement checkout yet. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-017 complete. TASK-018 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-018 complete. TASK-019 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-018 - Build restaurant detail and menu page.
-2. TASK-019 - Build basket.
+1. TASK-019 - Implement basket state.
+2. TASK-020 - Build basket page.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-018: Build restaurant detail and menu page.
-Implement only restaurant detail/menu scope; do not implement basket, checkout or manager tools.
+We are starting TASK-019: Implement basket state.
+Implement only basket-state scope; do not implement checkout or manager tools.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -483,3 +483,14 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Recorded user preference in AGENTS.md: show each finished UI slice on localhost with an explanation and keep final preview available. All work stayed within LocalEats and its authorized MY_PROJECT copy; no ARAM PROJECT resource was accessed or modified.
 - Hosted CI and portable sync/hash verification follow. Next TASK-018; no menu/basket functionality is claimed here.
 - TASK-017 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40762404478 . Feature commit 17c7feb is published on main. Desktop MY_PROJECT refreshed; all 151 portable files matched SHA-256 hashes. Final memory/setup record copied after this entry. Directory remains visibly open as a deliverable at http://127.0.0.1:5015/restaurants . Existing action-runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - TASK-018 restaurant details and menu
+
+- Added /restaurants/{slug}, connected directory View menu links, Application menu DTOs/service/interface and Infrastructure projected no-tracking reader. Only approved/active/non-deleted restaurants are readable. Active categories are shown with available and explicitly unavailable items; inactive categories/items under them are excluded.
+- Menu lists are bounded to 20 items per page with stable category/item ordering and count-clamped page offsets. Invalid/overflow page strings fall back safely. Slugs accept ASCII letters/digits/hyphens and normalize to lowercase; unknown/malformed/non-public slugs return a safe 404 without metadata.
+- Page shows description/address/area/cuisine/open status, category headings, item descriptions and prices. BDT with 100 minor units per major unit is the proposed Bangladesh sample display choice, not payment integration. All Add to basket placeholders remain disabled until TASK-019; unavailable items explicitly say Unavailable and closed restaurants show a browse-only notice.
+- Static non-streamed detail rendering preserves correct HTTP 404/503 status codes. Initial tests caught framework replacement of the page's not-found text; updated the shared NotFound page with contextual restaurant heading, h1 and directory link. Final hidden/missing/invalid cases all return indistinguishable safe 404 results. Read failures return safe retry with 503.
+- Added 8 HTTP/PostgreSQL cases for public 21-item pagination, price display, inactive categories, unavailable/disabled placeholders, four hidden/missing cases, closed/empty state, malformed slug and injected read failure. Final format passed; Release build passed with zero warnings/errors; all 145 tests passed (8 Domain, 38 Application, 99 HTTP/database), zero failures/skips.
+- Both LocalEats hosts /health returned 200. Demonstrated directory View menu → Dhaka Bites burger at BDT 399.00 and existing closed/address-missing state without altering existing samples. Checked 375/768/1440 layouts with no horizontal overflow. Final menu preview tab is marked deliverable at http://127.0.0.1:5015/restaurants/dhaka-bites . Screenshot outputs/restaurant-menu.png is ignored generated proof.
+- No schema, migration, dependency or user-role change. No ARAM PROJECT resource accessed/modified. Existing local data remains unchanged; menu fixtures clean only their own rows in _tests. Real basket/checkout and E2E automation remain later tasks.
+- Hosted CI and MY_PROJECT source/hash sync follow. Next TASK-019 basket state; Phase 5 begins.

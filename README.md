@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-016 - Seed restaurants and menu data
+TASK-017 - Build restaurant directory
 ```
 
 
@@ -160,10 +160,11 @@ Restore the repository-local EF tool before using migrations:
 
 ```powershell
 dotnet tool restore
-dotnet tool run dotnet-ef database update --project src/LocalEats.Infrastructure --startup-project src/LocalEats.Api
+$env:ConnectionStrings__DefaultConnection = 'Host=127.0.0.1;Port=15432;Database=localeats;Username=localeats;Password=localeats_dev_password'
+dotnet tool run dotnet-ef database update --project src/LocalEats.Infrastructure --startup-project src/LocalEats.Infrastructure
 ```
 
-In Development, starting either host applies pending migrations and seeds two sample restaurants with categories/items when the restaurant table is empty. Start one host first; this simple seed routine is intended for a single local developer. Production does not run this startup seeding/migration path. Set `ConnectionStrings__DefaultConnection` to override the database connection. No PostgreSQL tables need manual creation.
+In Development, starting either host applies pending migrations and inserts missing sample restaurants with categories/items by sample slug. Existing records and edits are preserved; sample insertion is serialized with a PostgreSQL transaction lock. Production does not run this startup seeding/migration path. Set `ConnectionStrings__DefaultConnection` to override the database connection. No PostgreSQL tables need manual creation.
 
 The first migration includes basic restaurant/menu/order/audit persistence. Later feature tasks still add their rules, required fields, ownership, and application flows. Identity has not started.
 
@@ -221,3 +222,5 @@ Admin-role users can open /admin with links to protected restaurant/user managem
 Dashboard integration coverage (TASK-014) verifies role access, logout challenges, placeholder states, safe missing-profile feedback and two-customer greeting isolation. Real order/restaurant data coverage follows the corresponding feature tasks.
 
 LocalEats PostgreSQL is published only at 127.0.0.1:15432 (container port 5432). This avoids interfering with separately installed PostgreSQL or other projects. Only manage the localeats Compose project; never stop unrelated containers/services.
+
+EF tooling requires an explicitly configured 127.0.0.1:15432/localeats endpoint and refuses missing or unrelated targets before connecting. This local tooling intentionally does not perform production migrations; a production deployment workflow must be approved separately.

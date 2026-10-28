@@ -745,3 +745,5 @@ The architecture is correctly implemented when:
 ### Restaurant foundation (TASK-015)
 
 Restaurant persists the existing IsApproved/IsActive flags, optional Address (500), Area/Cuisine (120), and IsOpen (false by default). Derived Domain visibility/orderability rules exclude soft-deleted records. See docs/decisions/0002-restaurant-foundation.md. Local development PostgreSQL uses only 127.0.0.1:15432; container-internal PostgreSQL remains on 5432.
+
+TASK-016: development sample inserts are atomic and serialized by a PostgreSQL advisory transaction lock, matched by sample slug and never overwrite existing rows. See docs/SEED_DATA.md. Design-time EF tooling requires the explicitly isolated LocalEats endpoint; production migration tooling is a separate deployment concern.

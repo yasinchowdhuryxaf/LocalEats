@@ -264,10 +264,10 @@ Foundation entities were introduced during TASK-003. This task remains open for 
 
 ## TASK-016: Seed restaurants and menu data
 
-- [ ] Add development sample restaurants.
-- [ ] Add menu categories.
-- [ ] Add menu items and prices.
-- [ ] Keep seed data out of production unless explicitly requested.
+- [x] Add development sample restaurants.
+- [x] Add menu categories.
+- [x] Add menu items and prices.
+- [x] Keep seed data out of production unless explicitly requested.
 
 ## TASK-017: Build restaurant directory
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 4 - Restaurant Directory and Menu Browsing
-- Current task: TASK-016
-- Branch: `codex/task-015-restaurant-foundation`
+- Current task: TASK-017
+- Branch: `codex/task-016-development-seed`
 - Status: [ ] Not started
-- Last completed task: TASK-015 - Create restaurant domain entities
-- Next task: TASK-016 - Seed restaurants and menu data
+- Last completed task: TASK-016 - Seed restaurants and menu data
+- Next task: TASK-017 - Build restaurant directory
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

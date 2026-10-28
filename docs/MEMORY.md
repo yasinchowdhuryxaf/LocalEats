@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-015 restaurant foundation complete. TASK-016 development sample data is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**Migration endpoint safeguard fixed; TASK-016 sample seeding complete. TASK-017 restaurant directory is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-016 - Seed restaurants and menu data (not started)**
+**TASK-017 - Build restaurant directory (not started)**
 
 ### Current task objective
 
-Review and complete development-only sample data in TASK-016; preserve production seeding boundaries. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Build the public restaurant directory in TASK-017 with approved/active/deletion filters, search, pagination and UI states. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-015 complete. TASK-016 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-016 complete. TASK-017 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-016 - Seed restaurants and menu data.
-2. TASK-017 - Build restaurant directory.
+1. TASK-017 - Build restaurant directory.
+2. TASK-018 - Build restaurant detail and menu page.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-016: Seed restaurants and menu data.
-Do not implement restaurant features yet.
+We are starting TASK-017: Build restaurant directory.
+Implement only the directory task; do not implement basket, checkout or manager tools.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -459,3 +459,14 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Both LocalEats Web (5015) and API (5253) /health returned 200 Healthy and are running against the isolated endpoint. No frontend feature was added. Sample-data enrichment remains TASK-016, public directory TASK-017, manager assignments TASK-025 and E2E TASK-045.
 - Hosted CI and MY_PROJECT source/hash sync follow. Next TASK-016; no later task implemented in this change.
 - TASK-015 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40758471142 . Feature commit e857b23 is published on main. Desktop MY_PROJECT refreshed; all 142 portable files matched SHA-256 hashes. Final memory copied after this entry. Existing action-runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - Migration endpoint safeguard fixed, then TASK-016
+
+- Removed all implicit design-time EF connection configuration/fallbacks. EF tools require explicit ConnectionStrings__DefaultConnection and accept only 127.0.0.1:15432/database localeats. Missing, port-5432 or other-database targets fail before connecting. Production migration workflow remains a separate deployment decision; no approval mechanism was disabled or bypassed.
+- Three rejection tests passed first; added a positive explicit-target context test. The explicit EF migrations-list command then succeeded against the authorized endpoint and showed all four applied migrations.
+- TASK-016 development samples now include marked demo addresses, open/closed examples, active categories/items and integer-minor-unit prices. Missing sample slugs are inserted transactionally even when other restaurants exist. Existing sample records and developer edits are never overwritten; older sample addresses/open states are preserved.
+- PostgreSQL advisory transaction lock serializes sample insert checks/inserts between local hosts. Outside-Development startup still returns without resolving the database. No users/passwords or production sample catalog are provisioned.
+- Added a real seed integration fixture for complete graph/price/status data, stable IDs/counts on repeat and edit preservation. Initial fixture refused to use pre-existing sample slugs in the shared test database; it did not modify them. Reworked it to create/migrate/drop only its own unique localeats_seed_<guid>_tests database. Test role requires CREATEDB, provided by LocalEats local/CI PostgreSQL containers.
+- Final formatting passed; Release build passed with zero warnings/errors; all 131 tests passed (8 Domain, 38 Application, 85 HTTP/database), zero failures/skips. Existing production-boundary test remains passing. No schema/migration or dependency change required.
+- Both LocalEats development hosts started and /health returned 200 Healthy. Existing catalog stayed at 2 restaurants, 2 categories and 2 items. No ARAM PROJECT files/documents, services or containers were accessed or changed. Only workspace-owned LocalEats hosts were stopped/restarted for the build.
+- Changed factory, seeder, database/seed tests, setup/readme/architecture/test docs and added docs/SEED_DATA.md. Hosted CI and MY_PROJECT sync/hash verification follow. Next TASK-017; no directory UI implemented yet.

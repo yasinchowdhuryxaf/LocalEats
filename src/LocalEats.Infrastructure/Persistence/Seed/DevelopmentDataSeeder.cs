@@ -18,11 +18,6 @@ public static class DevelopmentDataSeeder
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
         await DevelopmentRoleSeeder.SeedAsync(roleManager);
 
-        if (await dbContext.Restaurants.AnyAsync(cancellationToken))
-        {
-            return;
-        }
-
         var now = DateTimeOffset.UtcNow;
         var burgerCategory = new MenuCategory
         {
@@ -72,10 +67,12 @@ public static class DevelopmentDataSeeder
                 Name = "Dhaka Bites",
                 Slug = "dhaka-bites",
                 Description = "Comfort food made for busy Dhaka days.",
+                Address = "Demo address, Dhanmondi, Dhaka (sample only)",
                 Area = "Dhanmondi",
                 Cuisine = "Burgers",
                 IsApproved = true,
                 IsActive = true,
+                IsOpen = true,
                 CreatedAt = now,
                 UpdatedAt = now,
                 Categories = new List<MenuCategory> { burgerCategory }
@@ -86,17 +83,27 @@ public static class DevelopmentDataSeeder
                 Name = "Bowl House",
                 Slug = "bowl-house",
                 Description = "Simple rice bowls with bold local flavours.",
+                Address = "Demo address, Uttara, Dhaka (sample only)",
                 Area = "Uttara",
                 Cuisine = "Bangladeshi",
                 IsApproved = true,
                 IsActive = true,
+                IsOpen = false,
                 CreatedAt = now,
                 UpdatedAt = now,
                 Categories = new List<MenuCategory> { riceCategory }
             }
         };
 
-        dbContext.Restaurants.AddRange(restaurants);
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        // Serialize only LocalEats sample inserts when both local hosts start together.
+        await dbContext.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(21875901)", cancellationToken);
+        var sampleSlugs = restaurants.Select(restaurant => restaurant.Slug).ToArray();
+        var existingSlugs = await dbContext.Restaurants.AsNoTracking()
+            .Where(restaurant => sampleSlugs.Contains(restaurant.Slug))
+            .Select(restaurant => restaurant.Slug).ToListAsync(cancellationToken);
+        dbContext.Restaurants.AddRange(restaurants.Where(restaurant => !existingSlugs.Contains(restaurant.Slug)));
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 }

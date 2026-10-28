@@ -17,22 +17,8 @@ public sealed class CheckoutService(ICheckoutCatalogReader catalog)
         if (basket.Lines.Count > BasketState.MaxLines || basket.Lines.Any(line => line.Quantity < 1 || line.Quantity > BasketState.MaxQuantity)
             || basket.Lines.Select(line => line.ItemId).Distinct().Count() != basket.Lines.Count)
             return Failure("Your basket contains invalid quantities or items. Review your basket.");
-        var products = (await catalog.GetManyAsync(basket.Lines.Select(line => line.ItemId).ToArray(), cancellationToken)).ToDictionary(product => product.Id);
-        var lines = new List<CheckoutLine>();
-        Guid? restaurantId = null;
-        string? restaurantName = null;
-        foreach (var line in basket.Lines)
-        {
-            if (!products.TryGetValue(line.ItemId, out var product) || !product.CanOrder || product.RestaurantId == Guid.Empty
-                || product.PriceMinor < 0 || product.PriceMinor > long.MaxValue / (BasketState.MaxLines * BasketState.MaxQuantity))
-                return Failure("An item is unavailable or its restaurant is closed. Review your basket.");
-            if (restaurantId is not null && restaurantId != product.RestaurantId)
-                return Failure("Your basket must contain items from one restaurant.");
-            restaurantId = product.RestaurantId;
-            restaurantName = product.RestaurantName;
-            lines.Add(new(product.Name, line.Quantity, product.PriceMinor));
-        }
-        return new(restaurantName, lines, []);
+        var products = await catalog.GetManyAsync(basket.Lines.Select(line => line.ItemId).ToArray(), cancellationToken);
+        return CheckoutSummaryBuilder.Build(basket, products);
     }
 
     public async Task<CheckoutReview> ReviewAsync(ClaimsPrincipal user, BasketSnapshot basket, CheckoutInput input, CancellationToken cancellationToken = default)

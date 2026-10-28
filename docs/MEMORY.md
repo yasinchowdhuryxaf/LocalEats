@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-021 checkout review page complete. TASK-022 transactional order creation is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-022 transactional order creation complete. TASK-023 order confirmation is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-022 - Create order transaction (not started)**
+**TASK-023 - Build order confirmation (not started)**
 
 ### Current task objective
 
-Implement transactional order creation in TASK-022 with fresh server pricing/availability checks and server-derived customer identity. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Implement the full /orders/{id} confirmation page in TASK-023 with owner/manager/admin resource authorization. TASK-022 transactional creation now rechecks canonical prices/availability and saves immutable purchase snapshots. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-021 complete. TASK-022 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-022 complete. TASK-023 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-022 - Create order transaction.
-2. TASK-023 - Build customer order history.
+1. TASK-023 - Build order confirmation.
+2. TASK-024 - Build customer order history.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-022: Create order transaction.
-Implement only transactional order scope; do not implement manager tools or online payment integration.
+We are starting TASK-023: Build order confirmation.
+Implement only the full order confirmation page and resource access tests; do not implement customer history, manager tools or online payment integration.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -527,3 +527,14 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Browser /checkout correctly challenged to /login?ReturnUrl=%2Fcheckout. Left this page as a deliverable for the user to sign in. Authenticated form/layout/submit visuals were not manually checked; real HTTP fixtures verified form content and submissions. No account/role or closed restaurant status was changed to bypass the sign-in/basket requirements. Screenshot outputs/checkout-access.png is ignored generated proof of the access gate only.
 - Added checkout DTOs/service/reader contract, batched reader implementation, CheckoutPage/CSS and pending-state script; updated basket CTA, tests and docs. No schema/migration or dependency change. No ARAM PROJECT resource accessed/modified. Hosted CI and MY_PROJECT sync/hash verification follow. Next TASK-022.
 - TASK-021 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40772435461 . Feature commit ee77baf is published on main. Desktop MY_PROJECT refreshed; all 182 portable files matched SHA-256 hashes. Final memory copied after this entry. Browser sign-in gate remains a deliverable for /checkout; signed-in visual/pending-state QA remains outstanding. Existing CI runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - TASK-022 transactional cash order creation
+
+- Added Application order placement/receipt/store contracts, shared canonical summary builder and reviewed-quote fingerprint; Infrastructure Serializable transaction re-reads public/open catalog data, recalculates integer totals and commits header plus item snapshots atomically. New orders are Pending, customer identity comes from signed claims and random LE-prefixed order numbers use the existing unique constraint.
+- Added nullable legacy-compatible contact name/phone/address/notes/payment/request fields and customer foreign key with SET NULL on account deletion. Applied AddTransactionalOrderSnapshots only to explicit 127.0.0.1:15432/localeats. Read-only verification confirmed latest migration, zero development orders, and both bowl-house/dhaka-bites still closed. No data was invented for historical orders.
+- Checkout now offers Place order only after review, using a session-bound request GUID and server-held quote fingerprint. Rechecks contact/method/basket rules and current eligibility/prices; changed quotes require another review. Unique CustomerId/RequestId prevents duplicates, with fresh-context retries for serialization/deadlock/uniqueness races. A first test caught EF's nested transient-exception wrapper; corrected detection and reran concurrency plus all tests successfully.
+- Successful POST clears the submitted basket, redirects to a minimal customer-scoped receipt, and can recover the same order on replay. Replaying after adding a later basket does not clear that basket. A new checkout GET replaces the active request; independent multi-tab drafts and shared hosting/session storage remain outside this single-instance slice (ADRs 0003/0004).
+- Proposed light-development behavior: cash on delivery or pay at pickup only, zero delivery fee, no online charge or delivery-area eligibility. The full /orders/{id} page is TASK-023; customer history is TASK-024. Receipt link/history are not claimed as complete.
+- Added 6 Application cases and 8 PostgreSQL/HTTP cases covering authorization/input guards, server price despite tampered snapshots, immutable purchased names/prices, empty/invalid/unavailable/changed-price rejection, concurrent/repeated request uniqueness, rollback after a header save, and HTTP place/redirect/receipt/basket/replay. Final suite: 191 passed (8 Domain, 59 Application, 124 HTTP/database), zero failed/skipped. E2E project still has no tests; TASK-045 remains pending.
+- Final format verification and checkout-state.js syntax check passed; Release build passed with zero warnings/errors. Both Web/API health endpoints returned 200. Browser refreshed at the unchanged Customer sign-in gate for /checkout; no real account or restaurant was changed to bypass it. Authenticated form/pending-button visual QA remains outstanding; behavior was verified through isolated HTTP/database fixtures.
+- Changed order entity/configuration/migration, checkout summary/placement services, Infrastructure store/DI, Web checkout/DI/script, tests and supporting documentation. No new dependency or ARAM PROJECT access/change. Hosted CI and MY_PROJECT sync/hash verification follow; next TASK-023.

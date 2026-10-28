@@ -142,6 +142,14 @@ namespace LocalEats.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ContactPhone")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -153,10 +161,25 @@ namespace LocalEats.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CustomerId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("DeliveryAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("OrderNumber")
                         .IsRequired()
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("RequestId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("RestaurantId")
                         .HasColumnType("uuid");
@@ -176,6 +199,10 @@ namespace LocalEats.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("CustomerId", "CreatedAt");
+
+                    b.HasIndex("CustomerId", "RequestId")
+                        .IsUnique()
+                        .HasFilter("\"RequestId\" IS NOT NULL");
 
                     b.HasIndex("RestaurantId", "Status", "CreatedAt");
 
@@ -522,6 +549,11 @@ namespace LocalEats.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("LocalEats.Domain.Entities.Order", b =>
                 {
+                    b.HasOne("LocalEats.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("LocalEats.Domain.Entities.Restaurant", "Restaurant")
                         .WithMany("Orders")
                         .HasForeignKey("RestaurantId")

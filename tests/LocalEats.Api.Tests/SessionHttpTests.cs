@@ -1,6 +1,9 @@
 using System.Net;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using LocalEats.Application.Basket;
+using LocalEats.Application.Checkout;
+using LocalEats.Application.Orders;
 using LocalEats.Application.Restaurants;
 using LocalEats.Application.Security;
 using LocalEats.Domain.Entities;
@@ -11,6 +14,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LocalEats.Api.Tests;
@@ -24,6 +28,132 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? testRestaurantId;
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
+
+    private async Task<(ClaimsPrincipal User, BasketSnapshot Basket, CheckoutInput Contact, string Quote)> OrderDraftAsync()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        var itemId = await MenuItemId(slug);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var user = await scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>().FindByEmailAsync(email);
+        Assert.NotNull(user);
+        var principal = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), new Claim(ClaimTypes.Role, "Customer")], "test"));
+        var basket = new BasketSnapshot([new BasketLine(itemId, Guid.NewGuid(), "Tampered", "Tampered", 1, 2)]);
+        var summary = await scope.ServiceProvider.GetRequiredService<CheckoutService>().SummaryAsync(principal, basket);
+        return (principal, basket, new CheckoutInput { Name = "Order customer", Phone = "+8801712345678", Address = "Sample road", Notes = "Test notes" }, CheckoutQuote.Fingerprint(summary));
+    }
+
+    [Fact]
+    public async Task Order_ValidAndRepeated_UsesSnapshotsAndOnePersistedOrder()
+    {
+        var draft = await OrderDraftAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<OrderPlacementService>();
+        var requestId = Guid.NewGuid();
+        var result = await service.PlaceAsync(draft.User, requestId, draft.Basket, draft.Contact, draft.Quote);
+        Assert.True(result.Succeeded, result.Error);
+        var repeated = await service.PlaceAsync(draft.User, requestId, new BasketSnapshot([]), draft.Contact, draft.Quote);
+        Assert.Equal(result.Receipt, repeated.Receipt);
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var order = await db.Orders.Include(row => row.Items).SingleAsync(row => row.RequestId == requestId);
+        Assert.Equal(24692, order.TotalMinor);
+        Assert.Equal("Order customer", order.ContactName);
+        Assert.Equal("CashOnDelivery", order.PaymentMethod);
+        Assert.StartsWith("LE-", order.OrderNumber);
+        var item = Assert.Single(order.Items);
+        Assert.Equal("Menu item 01", item.ItemName);
+        Assert.Equal(12346, item.UnitPriceMinor);
+        await db.MenuItems.Where(row => row.Id == item.MenuItemId).ExecuteUpdateAsync(update => update.SetProperty(row => row.Name, "Changed catalog").SetProperty(row => row.PriceMinor, 999));
+        db.ChangeTracker.Clear();
+        Assert.Equal("Menu item 01", (await db.OrderItems.SingleAsync(row => row.Id == item.Id)).ItemName);
+        Assert.Equal(24692, (await db.Orders.SingleAsync(row => row.Id == order.Id)).TotalMinor);
+    }
+
+    [Fact]
+    public async Task Order_ConcurrentSameRequest_CreatesOneOrder()
+    {
+        var draft = await OrderDraftAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<OrderPlacementService>();
+        var requestId = Guid.NewGuid();
+        var results = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ => service.PlaceAsync(draft.User, requestId, draft.Basket, draft.Contact, draft.Quote)));
+        Assert.All(results, result => Assert.True(result.Succeeded, result.Error));
+        Assert.Equal(results[0].Receipt, results[1].Receipt);
+        Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Orders.CountAsync(row => row.RequestId == requestId));
+    }
+
+    [Theory]
+    [InlineData("empty")]
+    [InlineData("quantity")]
+    [InlineData("unavailable")]
+    [InlineData("price")]
+    public async Task Order_InvalidOrChangedDraft_CreatesNothing(string scenario)
+    {
+        var draft = await OrderDraftAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var basket = draft.Basket;
+        if (scenario == "empty") basket = new BasketSnapshot([]);
+        if (scenario == "quantity") basket = new BasketSnapshot([draft.Basket.Lines[0] with { Quantity = 0 }]);
+        if (scenario == "unavailable") await db.MenuItems.Where(row => row.Id == draft.Basket.Lines[0].ItemId).ExecuteUpdateAsync(update => update.SetProperty(row => row.IsAvailable, false));
+        if (scenario == "price") await db.MenuItems.Where(row => row.Id == draft.Basket.Lines[0].ItemId).ExecuteUpdateAsync(update => update.SetProperty(row => row.PriceMinor, 999));
+        var requestId = Guid.NewGuid();
+        var result = await scope.ServiceProvider.GetRequiredService<OrderPlacementService>().PlaceAsync(draft.User, requestId, basket, draft.Contact, draft.Quote);
+        Assert.False(result.Succeeded);
+        Assert.False(await db.Orders.AnyAsync(row => row.RequestId == requestId));
+    }
+
+    private sealed class RejectOrderItems : SaveChangesInterceptor
+    {
+        public bool HeaderSaved { get; private set; }
+        public override ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
+        {
+            if (eventData.Context?.ChangeTracker.Entries<Order>().Any() == true) HeaderSaved = true;
+            return ValueTask.FromResult(result);
+        }
+        public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (eventData.Context?.ChangeTracker.Entries<OrderItem>().Any(row => row.State == EntityState.Added) == true)
+                throw new InvalidOperationException("Forced item persistence failure.");
+            return ValueTask.FromResult(result);
+        }
+    }
+
+    [Fact]
+    public async Task Order_ItemSaveFails_RollsBackAlreadySavedHeader()
+    {
+        var draft = await OrderDraftAsync();
+        var interceptor = new RejectOrderItems();
+        await using var failing = Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddDbContext<LocalEatsDbContext>((_, options) => options.AddInterceptors(interceptor))));
+        await using var scope = failing.Services.CreateAsyncScope();
+        var requestId = Guid.NewGuid();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.ServiceProvider.GetRequiredService<OrderPlacementService>()
+            .PlaceAsync(draft.User, requestId, draft.Basket, draft.Contact, draft.Quote));
+        Assert.True(interceptor.HeaderSaved);
+        Assert.False(await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Orders.AnyAsync(row => row.RequestId == requestId));
+    }
+
+    [Fact]
+    public async Task Checkout_PlaceAndReplay_RedirectsToReceiptAndClearsBasketOnce()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        using var client = Client();
+        await AddBasketItem(client, slug, await MenuItemId(slug));
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/checkout");
+        fields["Input.Name"] = "Order customer"; fields["Input.Phone"] = "+8801712345678";
+        fields["Input.Address"] = "Sample address"; fields["Input.PaymentMethod"] = "CashOnDelivery";
+        fields["Action"] = "review";
+        Assert.Contains("Place order", await (await client.PostAsync("/checkout", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync());
+        fields["Action"] = "place";
+        var response = await client.PostAsync("/checkout", new FormUrlEncodedContent(fields));
+        Assert.Equal("/checkout?placed=true", response.Headers.Location?.ToString());
+        Assert.Contains("Order created", await client.GetStringAsync("/checkout?placed=true"));
+        Assert.Contains("Your basket is empty", await client.GetStringAsync("/basket"));
+        await AddBasketItem(client, slug, await MenuItemId(slug));
+        Assert.Equal("/checkout?placed=true", (await client.PostAsync("/checkout", new FormUrlEncodedContent(fields))).Headers.Location?.ToString());
+        Assert.DoesNotContain("Your basket is empty", await client.GetStringAsync("/basket"));
+    }
 
     [Theory]
     [InlineData("CashOnDelivery", "Sample address")]
@@ -932,6 +1062,10 @@ public sealed class SessionHttpTests : IAsyncLifetime
             UpdatedAt = now
         };
         testRestaurantId = restaurant.Id;
+        var otherEmail = $"order-owner-{Guid.NewGuid():N}@example.test";
+        var otherOwner = new ApplicationUser { UserName = otherEmail, Email = otherEmail };
+        Assert.True((await users.CreateAsync(otherOwner, Password)).Succeeded);
+        extraUserId = otherOwner.Id;
         var ownOrder = new Order
         {
             Id = Guid.NewGuid(),
@@ -945,7 +1079,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
         {
             Id = Guid.NewGuid(),
             Restaurant = restaurant,
-            CustomerId = Guid.NewGuid(),
+            CustomerId = extraUserId,
             OrderNumber = $"OTHER-{Guid.NewGuid():N}",
             CreatedAt = now,
             UpdatedAt = now
@@ -1180,6 +1314,8 @@ public sealed class SessionHttpTests : IAsyncLifetime
 
         await using (var scope = factory.Services.CreateAsyncScope())
         {
+            await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Orders
+                .Where(row => directoryIds.Contains(row.RestaurantId)).ExecuteDeleteAsync();
             await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Restaurants
                 .Where(row => directoryIds.Contains(row.Id)).ExecuteDeleteAsync();
             await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Users

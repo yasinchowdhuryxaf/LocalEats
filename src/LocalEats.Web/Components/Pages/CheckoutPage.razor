@@ -10,13 +10,19 @@
 @inject BasketService Basket
 @inject ProfileService Profiles
 @inject ILogger<CheckoutPage> Logger
+@using LocalEats.Application.Orders
+@inject OrderPlacementService Orders
 
 <PageTitle>Review checkout | LocalEats</PageTitle>
 <section class="checkout-page" aria-labelledby="checkout-heading">
     <a href="/basket">← Back to basket</a>
     <h1 id="checkout-heading">Review checkout</h1>
-    <p>Check your details and current item prices. Order submission is coming next; no order or payment is created here.</p>
-    @if (failed)
+    <p>Review the details before placing a demo cash order. No delivery fee or online payment is charged.</p>
+    @if (receipt is not null)
+    {
+        <section class="checkout-panel" role="status"><h2>Order created</h2><p>Order @receipt.Number · @receipt.Status</p><p>Total: BDT @Money(receipt.TotalMinor) · @(receipt.PaymentMethod == "CashOnDelivery" ? "Cash on Delivery" : "Pay at Pickup")</p><p>No online payment was collected. Full order details are coming next.</p><a href="/restaurants">Browse restaurants</a></section>
+    }
+    else if (failed)
     {
         <p role="alert">We couldn’t load checkout. Please try again or sign in again.</p><a href="/checkout">Reload checkout</a>
     }
@@ -28,13 +34,15 @@
         }
         @if (review is not null)
         {
-            @if (review.Errors.Count == 0) { <p role="status">Your details are valid. Order submission is not available yet; nothing has been placed or paid.</p> }
+            @if (review.Errors.Count == 0) { <p role="status">Your details are valid. Check the summary, then choose Place order. Nothing has been placed yet.</p> }
             else { <div role="alert">@foreach (var error in review.Errors) { <p>@error</p> }</div> }
         }
+        @if (placementError is not null) { <p role="alert">@placementError</p> }
         <div class="checkout-layout">
             <section class="checkout-panel" aria-labelledby="details-heading">
                 <h2 id="details-heading">Your details</h2>
                 <EditForm id="checkout-form" Model="Input" OnValidSubmit="ReviewAsync" FormName="checkout-review" Enhance="false">
+                    <input type="hidden" name="RequestId" value="@RequestId" />
                     <DataAnnotationsValidator /><div role="alert"><ValidationSummary /></div>
                     <label for="checkout-name">Name</label>
                     <InputText id="checkout-name" @bind-Value="Input.Name" maxlength="100" autocomplete="name" required />
@@ -54,7 +62,8 @@
                     <label for="checkout-notes">Order notes (optional)</label>
                     <InputTextArea id="checkout-notes" @bind-Value="Input.Notes" maxlength="500" rows="3" />
                     <ValidationMessage For="() => Input.Notes" />
-                    <button type="submit" disabled="@(!summary.CanReview || processing)" data-can-review="@(summary.CanReview ? "true" : "false")">@(processing ? "Reviewing…" : "Review checkout")</button>
+                    <button type="submit" name="Action" value="review" disabled="@(!summary.CanReview || processing)" data-ready="@(summary.CanReview ? "true" : "false")" data-label="Review checkout">Review checkout</button>
+                    @if (canPlace) { <button type="submit" name="Action" value="place" disabled="@processing" data-ready="true" data-label="Place order">Place order</button> }
                 </EditForm>
             </section>
             <aside class="checkout-panel" aria-labelledby="summary-heading">
@@ -65,7 +74,7 @@
                     <div class="checkout-line"><h3>@line.Name</h3><p>@line.Quantity × BDT @Money(line.UnitPriceMinor) · BDT @Money(line.TotalMinor)</p></div>
                 }
                 <p><strong>Current item subtotal: BDT @Money(summary.SubtotalMinor)</strong></p>
-                <p>Prices and availability were checked on the server. Delivery fees are not configured or included. This is not an order confirmation.</p>
+                <p>Prices and availability are checked on the server. Demo delivery fee: BDT 0.00. Review is not an order confirmation.</p>
             </aside>
         </div>
     }
@@ -78,12 +87,19 @@
     private CheckoutReview? review;
     private bool failed;
     private bool processing;
-    public CheckoutPage() => Input = new();
+    private bool canPlace;
+    private string? placementError;
+    private OrderReceipt? receipt;
+    [SupplyParameterFromForm] public Guid RequestId { get; set; }
+    [SupplyParameterFromForm] public string Action { get; set; }
+    [SupplyParameterFromQuery(Name = "placed")] public string? Placed { get; set; }
+    public CheckoutPage() { Input = new(); Action = "review"; }
     private static string Money(long minor) => (minor / 100m).ToString("N2", CultureInfo.InvariantCulture);
 
     protected override async Task OnInitializedAsync()
     {
         Input ??= new();
+        Action ??= "review";
         try
         {
             if (HttpContext is null) { failed = true; return; }
@@ -93,6 +109,18 @@
             {
                 Input.Name = profile.DisplayName;
                 Input.Phone = profile.PhoneNumber ?? string.Empty;
+            }
+            if (HttpMethods.IsGet(HttpContext.Request.Method) && Placed == "true"
+                && Guid.TryParse(HttpContext.Session.GetString("LastOrderRequest"), out var last))
+            {
+                receipt = await Orders.FindAsync(HttpContext.User, last, HttpContext.RequestAborted);
+                if (receipt is not null) return;
+            }
+            if (HttpMethods.IsGet(HttpContext.Request.Method))
+            {
+                RequestId = Guid.NewGuid();
+                HttpContext.Session.SetString("CheckoutRequest", RequestId.ToString());
+                HttpContext.Session.Remove("CheckoutQuote");
             }
             summary = await Checkout.SummaryAsync(HttpContext.User, Basket.Snapshot(), HttpContext.RequestAborted);
         }
@@ -109,13 +137,29 @@
         processing = true;
         try
         {
+            if (!Guid.TryParse(HttpContext.Session.GetString("CheckoutRequest"), out var expected) || RequestId != expected)
+            { placementError = "Checkout expired. Reload checkout and review again."; return; }
+            if (Action == "place")
+            {
+                var placed = await Orders.PlaceAsync(HttpContext.User, RequestId, Basket.Snapshot(), Input,
+                    HttpContext.Session.GetString("CheckoutQuote"), HttpContext.RequestAborted);
+                if (!placed.Succeeded) { placementError = placed.Error; return; }
+                if (HttpContext.Session.GetString("LastOrderRequest") != RequestId.ToString()) Basket.Clear();
+                HttpContext.Session.SetString("LastOrderRequest", RequestId.ToString());
+                HttpContext.Response.Redirect("/checkout?placed=true");
+                return;
+            }
+            if (Action != "review") { placementError = "Choose Review checkout or Place order."; return; }
             review = await Checkout.ReviewAsync(HttpContext.User, Basket.Snapshot(), Input, HttpContext.RequestAborted);
             summary = review.Summary;
+            canPlace = review.Errors.Count == 0;
+            if (canPlace) HttpContext.Session.SetString("CheckoutQuote", CheckoutQuote.Fingerprint(summary));
+            else HttpContext.Session.Remove("CheckoutQuote");
         }
         catch (Exception exception)
         {
             Logger.LogError("Checkout review failed with error type {ErrorType}.", exception.GetType().Name);
-            failed = true;
+            placementError = "Order creation or review failed. Please retry checkout.";
         }
         finally { processing = false; }
     }

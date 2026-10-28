@@ -325,15 +325,15 @@ Goal: allow a customer to create a valid order from one restaurant.
 
 ## TASK-022: Create order transaction
 
-Basic persistence entities exist from TASK-003; transactional ordering behavior remains unimplemented.
+Existing TASK-003 entities now support transactional cash orders with contact/item snapshots and repeat-submission protection. See ADR 0004.
 
-- [ ] Add Order and OrderItem entities.
-- [ ] Re-read menu prices from PostgreSQL.
-- [ ] Recalculate totals on the server.
-- [ ] Reject unavailable or invalid items.
-- [ ] Create the order and items in one transaction.
-- [ ] Save purchased item name and price snapshots.
-- [ ] Add order number generation.
+- [x] Add Order and OrderItem entities.
+- [x] Re-read menu prices from PostgreSQL.
+- [x] Recalculate totals on the server.
+- [x] Reject unavailable or invalid items.
+- [x] Create the order and items in one transaction.
+- [x] Save purchased item name and price snapshots.
+- [x] Add order number generation.
 
 Tests:
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 5 - Basket and Order Creation
-- Current task: TASK-022
-- Branch: `codex/task-021-checkout-page`
+- Current task: TASK-023
+- Branch: `codex/task-022-order-transaction`
 - Status: [ ] Not started
-- Last completed task: TASK-021 - Build checkout page
-- Next task: TASK-022 - Create order transaction
+- Last completed task: TASK-022 - Create order transaction
+- Next task: TASK-023 - Build order confirmation
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

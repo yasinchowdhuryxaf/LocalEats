@@ -209,7 +209,7 @@ After signing in, open `/account` or select Your account from `/session`. Email 
 
 ## Customer dashboard (TASK-011)
 
-Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens the public directory; menus are available, while ordering and order history remain later tasks. Explicit safe local login return URLs remain honored.
+Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens the public directory; menus are available, while full order confirmation/history remain later tasks. Explicit safe local login return URLs remain honored.
 
 ## Manager dashboard (TASK-012)
 
@@ -231,16 +231,16 @@ Open http://127.0.0.1:5015/restaurants. Search by name, filter by exact area/cui
 
 ## Restaurant menus (TASK-018)
 
-Open /restaurants and choose View menu. Public restaurant details show active menu categories, BDT sample prices, availability and closed status. Menus paginate 20 items at a time. Missing/private restaurants return safe 404s. Available items at open restaurants can be added to a browser-session basket. Unavailable/closed items remain disabled. No payment or order creation is implemented.
+Open /restaurants and choose View menu. Public restaurant details show active menu categories, BDT sample prices, availability and closed status. Menus paginate 20 items at a time. Missing/private restaurants return safe 404s. Available items at open restaurants can be added to a browser-session basket. Unavailable/closed items remain disabled. Cash order creation is available through Customer checkout; no online payment is collected.
 
 ## Basket state (TASK-019)
 
-Open a restaurant menu to see the basket preview and header count. Available items at open restaurants support add/increase/decrease/remove/clear; one restaurant per basket. Current development samples remain closed at the user's request, so their add controls stay disabled. The temporary basket expires after 30 minutes inactivity or restart and clears on logout. The dedicated /basket page is available; checkout is not implemented. See ADR 0003 for limits and hosting assumptions.
+Open a restaurant menu to see the basket preview and header count. Available items at open restaurants support add/increase/decrease/remove/clear; one restaurant per basket. Current development samples remain closed at the user's request, so their add controls stay disabled. The temporary basket expires after 30 minutes inactivity or restart and clears on logout. The dedicated /basket page is available; Customer checkout and explicit cash order creation are available. See ADR 0003 for limits and hosting assumptions.
 
 ## Basket page (TASK-020)
 
-Open http://127.0.0.1:5015/basket or use the header basket link. Filled baskets show item quantities, prices, line totals, display subtotal and update/remove/clear controls; empty baskets link to restaurants. Continue to checkout opens the Customer-only review page. Order creation is not available yet. Restaurant statuses remain unchanged.
+Open http://127.0.0.1:5015/basket or use the header basket link. Filled baskets show item quantities, prices, line totals, display subtotal and update/remove/clear controls; empty baskets link to restaurants. Continue to checkout opens the Customer-only review page. Cash order creation follows the checkout review step. Restaurant statuses remain unchanged.
 
 ## Checkout review (TASK-021)
 
-Open /checkout and sign in as a Customer. Review contact details, Cash on Delivery (address required) or Pay at Pickup, notes and current server-checked item prices. The Review checkout action validates only: no order/payment is created and the basket is retained. Empty/unavailable baskets block review. A small browser submit-state script handles pending feedback; application rules remain C#. Transactional orders are TASK-022.
+Open /checkout and sign in as a Customer. Review contact details, Cash on Delivery (address required) or Pay at Pickup, notes and current server-checked item prices. The Review checkout action validates only: no order/payment is created and the basket is retained. Empty/unavailable baskets block review. A small browser submit-state script handles pending feedback; application rules remain C#. After a valid review, choose Place order to commit a cash order. TASK-022 revalidates current catalog prices/availability in one database transaction, saves purchase/contact snapshots and prevents duplicate submissions. A minimal receipt appears after redirect. Delivery fee is zero in this development slice; no online charge occurs. Full order details and history remain TASK-023/024.

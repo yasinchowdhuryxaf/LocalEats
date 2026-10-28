@@ -10,6 +10,13 @@ public sealed class Order
 
     public Guid? CustomerId { get; set; }
 
+    public Guid? RequestId { get; set; }
+    public string? ContactName { get; set; }
+    public string? ContactPhone { get; set; }
+    public string? DeliveryAddress { get; set; }
+    public string? Notes { get; set; }
+    public string? PaymentMethod { get; set; }
+
     public string OrderNumber { get; set; } = string.Empty;
 
     public OrderStatus Status { get; set; }

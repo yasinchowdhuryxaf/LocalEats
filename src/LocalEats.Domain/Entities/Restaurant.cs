@@ -10,6 +10,8 @@ public sealed class Restaurant
 
     public string? Description { get; set; }
 
+    public string? Address { get; set; }
+
     public string? Area { get; set; }
 
     public string? Cuisine { get; set; }
@@ -17,6 +19,12 @@ public sealed class Restaurant
     public bool IsApproved { get; set; }
 
     public bool IsActive { get; set; }
+
+    public bool IsOpen { get; set; }
+
+    public bool IsVisible => IsApproved && IsActive && DeletedAt is null;
+
+    public bool CanAcceptOrders => IsVisible && IsOpen;
 
     public DateTimeOffset CreatedAt { get; set; }
 

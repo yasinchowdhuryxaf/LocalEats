@@ -18,7 +18,7 @@ public sealed class RegistrationPersistenceTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         var connection = Environment.GetEnvironmentVariable("LOCALEATS_TEST_CONNECTION")
-            ?? "Host=localhost;Port=5432;Database=localeats_registration_tests;Username=localeats;Password=localeats_dev_password";
+            ?? "Host=127.0.0.1;Port=15432;Database=localeats_registration_tests;Username=localeats;Password=localeats_dev_password";
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ConnectionStrings:DefaultConnection"] = connection

@@ -71,3 +71,5 @@ TASK-013: HTTP role matrix covers /admin, /admin/restaurants and /admin/users. T
 These tests use real HTTP requests, Identity cookies and PostgreSQL in the dedicated `_tests` database. Each fixture removes only its generated users. No running development account is granted privileges. This task introduces no schema, runtime behavior or dependencies.
 
 Order-history and assigned-restaurant isolation cannot be asserted as implemented features yet: the dashboards currently expose placeholders. Add those integration cases when TASK-023 and TASK-025 connect the real data. Browser E2E automation remains TASK-045; manager/admin visual QA remains outstanding.
+
+TASK-015 local tests use only the LocalEats PostgreSQL endpoint 127.0.0.1:15432. CI supplies LOCALEATS_TEST_CONNECTION for its own ephemeral service. New tests cover status/soft-deletion visibility, closed defaults, address persistence, and PostgreSQL rejection of blank names/slugs and oversized addresses. No ARAM PROJECT resources are accessed or modified.

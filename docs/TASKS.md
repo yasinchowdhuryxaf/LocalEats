@@ -256,11 +256,11 @@ Goal: let customers discover approved restaurants and view menus.
 
 Foundation entities were introduced during TASK-003. This task remains open for required fields, rules, indexes, and tests.
 
-- [ ] Add Restaurant.
-- [ ] Add Restaurant status and approval status.
-- [ ] Add restaurant address, area, cuisine, and opening status fields.
-- [ ] Add EF Core configuration and migration.
-- [ ] Add indexes for status, area, cuisine, and slug.
+- [x] Add Restaurant.
+- [x] Add Restaurant status and approval status.
+- [x] Add restaurant address, area, cuisine, and opening status fields.
+- [x] Add EF Core configuration and migration.
+- [x] Add indexes for status, area, cuisine, and slug.
 
 ## TASK-016: Seed restaurants and menu data
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 4 - Restaurant Directory and Menu Browsing
-- Current task: TASK-015
-- Branch: `codex/task-014-dashboard-tests`
+- Current task: TASK-016
+- Branch: `codex/task-015-restaurant-foundation`
 - Status: [ ] Not started
-- Last completed task: TASK-014 - Add dashboard integration tests
-- Next task: TASK-015 - Create restaurant domain entities
+- Last completed task: TASK-015 - Create restaurant domain entities
+- Next task: TASK-016 - Seed restaurants and menu data
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-014 dashboard integration tests complete. TASK-015 restaurant domain entities are next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-015 restaurant foundation complete. TASK-016 development sample data is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-015 - Create restaurant domain entities (not started)**
+**TASK-016 - Seed restaurants and menu data (not started)**
 
 ### Current task objective
 
-Review and extend the early restaurant entities in TASK-015; add required fields, rules, indexes and migrations. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Review and complete development-only sample data in TASK-016; preserve production seeding boundaries. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-014 complete. TASK-015 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-015 complete. TASK-016 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-015 - Create restaurant domain entities.
-2. TASK-016 - Seed restaurants and menu data.
+1. TASK-016 - Seed restaurants and menu data.
+2. TASK-017 - Build restaurant directory.
 
 ## 6. Known Decisions
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-015: Create restaurant domain entities.
+We are starting TASK-016: Seed restaurants and menu data.
 Do not implement restaurant features yet.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -447,3 +447,14 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Order-history data isolation remains tied to TASK-023; assigned-restaurant isolation remains TASK-025. Their current placeholders do not claim those features are implemented. TEST_PLAN.md maps each TASK-014 requirement to verified current coverage.
 - Hosted CI and Desktop MY_PROJECT sync/hash verification follow. Next: TASK-015 restaurant domain entities; Phase 4 begins. Development preview will be restarted after verification.
 - TASK-014 hosted CI passed every step: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40413670572 . Feature commit de0a2a0 is published on main. Desktop MY_PROJECT refreshed and all 138 portable files matched SHA-256 hashes; final memory copied after this entry. Normal local preview is running at http://127.0.0.1:5015/ . Existing CI action-runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - Resume audit and TASK-015 restaurant foundation
+
+- Confirmed clean starting repository at TASK-014, installed SDK 10.0.403 and healthy localeats-postgres. Scope is LocalEats workspace plus its authorized Desktop MY_PROJECT portable copy only. ARAM PROJECT files/documents were not opened or changed, and no unrelated container/service was modified or stopped. A read-only port/process check diagnosed an existing separate PostgreSQL listener; no further unrelated checks are needed.
+- Retained IsApproved/IsActive as authoritative approval/availability flags. Added optional Address (500), IsOpen default false, Domain IsVisible/CanAcceptOrders rules, area/cuisine indexes and database checks rejecting space-only names/slugs. Draft area/cuisine remain optional; detailed approval workflow stays TASK-033. ADR 0002 records these choices.
+- Generated and reviewed 20261028195440_CompleteRestaurantFoundation. Applied explicitly to LocalEats; both existing restaurants and their approval/active flags are preserved, both closed by safe default. New area/cuisine indexes and existing status/unique-slug indexes verified.
+- Initial localhost:5432 migration/tests failed authentication because the host also runs separate PostgreSQL. Rebound ONLY localeats-postgres to 127.0.0.1:15432, retaining its volume. Updated LocalEats configuration, test fallbacks and portable setup docs; CI keeps its explicit ephemeral-service connection. No other PostgreSQL server was reconfigured.
+- Automatic approval review rejected one migration command without an explicit isolated endpoint. It did not execute. Retried with explicit ConnectionStrings__DefaultConnection targeting 127.0.0.1:15432; it succeeded. No password or role changes were made.
+- Added 7 Domain cases plus 4 PostgreSQL cases for status/deletion visibility, ordering defaults, address round-trip and invalid name/slug/address rejection. Final format verification passed; Release build passed with zero warnings/errors; all 126 tests passed (8 Domain, 38 Application, 80 HTTP/database), zero failures/skips. Earlier authentication failures are superseded by the complete passing isolated-port run.
+- Both LocalEats Web (5015) and API (5253) /health returned 200 Healthy and are running against the isolated endpoint. No frontend feature was added. Sample-data enrichment remains TASK-016, public directory TASK-017, manager assignments TASK-025 and E2E TASK-045.
+- Hosted CI and MY_PROJECT source/hash sync follow. Next TASK-016; no later task implemented in this change.

@@ -26,7 +26,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
     public async Task InitializeAsync()
     {
         var connection = Environment.GetEnvironmentVariable("LOCALEATS_TEST_CONNECTION")
-            ?? "Host=localhost;Port=5432;Database=localeats_registration_tests;Username=localeats;Password=localeats_dev_password";
+            ?? "Host=127.0.0.1;Port=15432;Database=localeats_registration_tests;Username=localeats;Password=localeats_dev_password";
         var parsed = new Npgsql.NpgsqlConnectionStringBuilder(connection);
         if (parsed.Database?.EndsWith("_tests", StringComparison.Ordinal) != true)
         {
@@ -203,6 +203,65 @@ public sealed class SessionHttpTests : IAsyncLifetime
         var response = await client.GetAsync("/session");
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("/login?ReturnUrl=", response.Headers.Location?.ToString());
+    }
+
+    [Fact]
+    public async Task Restaurant_Foundation_RoundTripsAddressAndDefaultsClosed()
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var restaurant = new Restaurant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Foundation test",
+            Slug = $"foundation-{Guid.NewGuid():N}",
+            Address = "Test street",
+            Area = "Test area",
+            Cuisine = "Test cuisine",
+            IsApproved = true,
+            IsActive = true,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        testRestaurantId = restaurant.Id;
+        db.Restaurants.Add(restaurant);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var saved = await db.Restaurants.SingleAsync(row => row.Id == testRestaurantId);
+        Assert.Equal("Test street", saved.Address);
+        Assert.True(saved.IsVisible);
+        Assert.False(saved.IsOpen);
+        Assert.False(saved.CanAcceptOrders);
+        saved.IsOpen = true;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        Assert.True((await db.Restaurants.SingleAsync(row => row.Id == testRestaurantId)).CanAcceptOrders);
+    }
+
+    [Theory]
+    [InlineData("name")]
+    [InlineData("slug")]
+    [InlineData("address")]
+    public async Task Restaurant_InvalidFoundationFields_PostgresRejectsWrite(string field)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var restaurant = new Restaurant
+        {
+            Id = Guid.NewGuid(),
+            Name = "Constraint test",
+            Slug = $"constraint-{Guid.NewGuid():N}",
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+        testRestaurantId = restaurant.Id;
+        if (field == "name") restaurant.Name = "   ";
+        if (field == "slug") restaurant.Slug = "   ";
+        if (field == "address") restaurant.Address = new string('a', 501);
+        db.Restaurants.Add(restaurant);
+        var exception = await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        var provider = Assert.IsType<Npgsql.PostgresException>(exception.InnerException);
+        Assert.Equal(field == "address" ? "22001" : "23514", provider.SqlState);
     }
 
     [Fact]

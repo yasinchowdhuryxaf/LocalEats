@@ -741,3 +741,7 @@ The architecture is correctly implemented when:
 - Background jobs are retryable and idempotent.
 - Preview and production use separate configuration and databases.
 - The folder structure and dependency rules remain documented here.
+
+### Restaurant foundation (TASK-015)
+
+Restaurant persists the existing IsApproved/IsActive flags, optional Address (500), Area/Cuisine (120), and IsOpen (false by default). Derived Domain visibility/orderability rules exclude soft-deleted records. See docs/decisions/0002-restaurant-foundation.md. Local development PostgreSQL uses only 127.0.0.1:15432; container-internal PostgreSQL remains on 5432.

@@ -82,3 +82,5 @@ Do not edit files until the plan is clear.
 - `.env.example` contains development placeholders only.
 - Keep `.env` and user secrets on each computer separately.
 - Generated `bin/`, `obj/`, and local database data are not part of the source project.
+
+Database endpoint: 127.0.0.1:15432. Use the LocalEats Compose service; do not change or stop other projects' databases. Internal container PostgreSQL remains port 5432.

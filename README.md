@@ -65,8 +65,8 @@ docker compose ps
 The local database is available at:
 
 ```text
-Host=localhost
-Port=5432
+Host=127.0.0.1
+Port=15432
 Database=localeats
 Username=localeats
 Password=localeats_dev_password
@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-015 - Create restaurant domain entities
+TASK-016 - Seed restaurants and menu data
 ```
 
 
@@ -219,3 +219,5 @@ Manager-role users can open /manager. Restaurant setup, menu and orders links le
 Admin-role users can open /admin with links to protected restaurant/user management placeholders. Pending restaurant counts are not connected. Actual approval and user administration remain TASK-033/034; no default Admin account, role-grant endpoint or management mutation is introduced.
 
 Dashboard integration coverage (TASK-014) verifies role access, logout challenges, placeholder states, safe missing-profile feedback and two-customer greeting isolation. Real order/restaurant data coverage follows the corresponding feature tasks.
+
+LocalEats PostgreSQL is published only at 127.0.0.1:15432 (container port 5432). This avoids interfering with separately installed PostgreSQL or other projects. Only manage the localeats Compose project; never stop unrelated containers/services.

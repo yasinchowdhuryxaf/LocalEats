@@ -17,7 +17,7 @@ public sealed class LocalEatsDbContextFactory : IDesignTimeDbContextFactory<Loca
 
         var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
             ?? configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5432;Database=localeats;Username=localeats;Password=localeats_dev_password";
+            ?? "Host=127.0.0.1;Port=15432;Database=localeats;Username=localeats;Password=localeats_dev_password";
 
         var options = new DbContextOptionsBuilder<LocalEatsDbContext>()
             .UseNpgsql(connectionString)

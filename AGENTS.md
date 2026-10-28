@@ -45,3 +45,10 @@ dotnet test
 ```
 
 When reporting completion, list changed files, tests run, assumptions, skipped work, and remaining issues.
+
+## Project isolation
+
+- Access and modify only this LocalEats workspace and the authorized Desktop MY_PROJECT portable copy.
+- Docker operations must target only the localeats Compose project or localeats-postgres container.
+- Never access or modify ARAM PROJECT files, containers, services or database.
+- Do not stop or reconfigure other PostgreSQL services. LocalEats uses 127.0.0.1:15432.

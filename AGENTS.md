@@ -52,3 +52,7 @@ When reporting completion, list changed files, tests run, assumptions, skipped w
 - Docker operations must target only the localeats Compose project or localeats-postgres container.
 - Never access or modify ARAM PROJECT files, containers, services or database.
 - Do not stop or reconfigure other PostgreSQL services. LocalEats uses 127.0.0.1:15432.
+
+## Visible progress
+
+After each finished UI slice, run the LocalEats localhost preview, show the changed page to the user, and explain what changed. Leave the final preview tab available. For backend-only work, explain the behavior and verification rather than inventing visible features.

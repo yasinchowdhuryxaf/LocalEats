@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-017 - Build restaurant directory
+TASK-018 - Build restaurant detail and menu page
 ```
 
 
@@ -209,7 +209,7 @@ After signing in, open `/account` or select Your account from `/session`. Email 
 
 ## Customer dashboard (TASK-011)
 
-Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens a coming-soon page until TASK-017; ordering and order history are not implemented yet. Explicit safe local login return URLs remain honored.
+Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens the public directory; menus, ordering and order history remain later tasks. Explicit safe local login return URLs remain honored.
 
 ## Manager dashboard (TASK-012)
 
@@ -224,3 +224,7 @@ Dashboard integration coverage (TASK-014) verifies role access, logout challenge
 LocalEats PostgreSQL is published only at 127.0.0.1:15432 (container port 5432). This avoids interfering with separately installed PostgreSQL or other projects. Only manage the localeats Compose project; never stop unrelated containers/services.
 
 EF tooling requires an explicitly configured 127.0.0.1:15432/localeats endpoint and refuses missing or unrelated targets before connecting. This local tooling intentionally does not perform production migrations; a production deployment workflow must be approved separately.
+
+## Restaurant directory (TASK-017)
+
+Open http://127.0.0.1:5015/restaurants. Search by name, filter by exact area/cuisine, and page through six results at a time. Only approved, active, non-deleted restaurants are public; closed ones remain browseable. Menu pages are TASK-018. Sample cards use decorative placeholders until image storage is decided.

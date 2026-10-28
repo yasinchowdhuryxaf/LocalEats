@@ -271,12 +271,12 @@ Foundation entities were introduced during TASK-003. This task remains open for 
 
 ## TASK-017: Build restaurant directory
 
-- [ ] Create `/restaurants`.
-- [ ] Show only approved and active restaurants.
-- [ ] Add search by name.
-- [ ] Add area and cuisine filters.
-- [ ] Add pagination.
-- [ ] Add loading, empty, and error states.
+- [x] Create `/restaurants`.
+- [x] Show only approved and active restaurants.
+- [x] Add search by name.
+- [x] Add area and cuisine filters.
+- [x] Add pagination.
+- [x] Add loading, empty, and error states.
 
 ## TASK-018: Build restaurant detail and menu page
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 4 - Restaurant Directory and Menu Browsing
-- Current task: TASK-017
-- Branch: `codex/task-016-development-seed`
+- Current task: TASK-018
+- Branch: `codex/task-017-restaurant-directory`
 - Status: [ ] Not started
-- Last completed task: TASK-016 - Seed restaurants and menu data
-- Next task: TASK-017 - Build restaurant directory
+- Last completed task: TASK-017 - Build restaurant directory
+- Next task: TASK-018 - Build restaurant detail and menu page
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

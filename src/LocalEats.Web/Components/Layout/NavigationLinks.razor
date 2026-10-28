@@ -1,6 +1,7 @@
 @using LocalEats.Application.Security
 
 <a href="/">Home</a>
+<a href="/restaurants">Restaurants</a>
 @if (HttpContext?.User.Identity?.IsAuthenticated == true)
 {
     @if (HttpContext.User.IsInRole(RoleNames.Customer))

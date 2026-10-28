@@ -1,6 +1,7 @@
 using System.Net;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using LocalEats.Application.Restaurants;
 using LocalEats.Application.Security;
 using LocalEats.Domain.Entities;
 using LocalEats.Infrastructure.Identity;
@@ -22,6 +23,90 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private const string Password = "Session-Test-Password123!";
     private Guid? testRestaurantId;
     private Guid? extraUserId;
+    private readonly List<Guid> directoryIds = [];
+
+    [Theory]
+    [InlineData("not-a-number")]
+    [InlineData("-1")]
+    [InlineData("2147483648")]
+    public async Task Directory_InvalidPage_FallsBackSafely(string page)
+    {
+        using var client = Client();
+        var html = await client.GetStringAsync($"/restaurants?q={Guid.NewGuid():N}&page={page}");
+        Assert.Contains("Page 1 of 1", html);
+        Assert.Contains("No restaurants match your search", html);
+    }
+
+    [Fact]
+    public async Task Directory_ReadFailure_ShowsSafeRetryWithoutProviderDetails()
+    {
+        await using var failing = Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddScoped<IRestaurantDirectoryReader>(_ => new FailingDirectoryReader())));
+        using var client = failing.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/restaurants"));
+        Assert.Contains("We couldn’t load restaurants. Please try again.", html);
+        Assert.Contains("Try again", html);
+        Assert.DoesNotContain("sensitive-provider-detail", html);
+    }
+
+    private sealed class FailingDirectoryReader : IRestaurantDirectoryReader
+    {
+        public Task<RestaurantDirectoryResult> SearchAsync(RestaurantDirectoryQuery query, int pageSize, CancellationToken cancellationToken = default)
+            => Task.FromException<RestaurantDirectoryResult>(new InvalidOperationException("sensitive-provider-detail"));
+    }
+
+    [Fact]
+    public async Task Directory_Anonymous_FiltersAndPaginatesOnlyPublicRecords()
+    {
+        var token = Guid.NewGuid().ToString("N");
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+            for (var i = 0; i < 10; i++)
+            {
+                var row = new Restaurant
+                {
+                    Id = Guid.NewGuid(),
+                    Name = $"Directory {token} {i:D2}",
+                    Slug = $"directory-{token}-{i}",
+                    Area = i == 0 ? "North" : "South",
+                    Cuisine = "Rice",
+                    IsApproved = i != 7,
+                    IsActive = i != 8,
+                    DeletedAt = i == 9 ? DateTimeOffset.UtcNow : null,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = DateTimeOffset.UtcNow
+                };
+                directoryIds.Add(row.Id);
+                db.Restaurants.Add(row);
+            }
+            await db.SaveChangesAsync();
+        }
+        using var client = Client();
+        var first = await client.GetStringAsync($"/restaurants?q={token}");
+        Assert.Contains("7 restaurants found", first);
+        Assert.Contains($"Directory {token} 00", first);
+        foreach (var number in new[] { 6, 7, 8, 9 }) Assert.DoesNotContain($"Directory {token} {number:D2}", first);
+        var second = await client.GetStringAsync($"/restaurants?q={token}&page=2");
+        Assert.Contains($"Directory {token} 06", second);
+        Assert.DoesNotContain($"Directory {token} 00", second);
+        Assert.Contains("Page 2 of 2", second);
+        var filtered = await client.GetStringAsync($"/restaurants?q={token}&area=nORTH&cuisine=RICE&page=2147483647");
+        Assert.Contains("1 restaurant found", filtered);
+        Assert.Contains($"Directory {token} 00", filtered);
+        Assert.Contains("Closed", filtered);
+        Assert.DoesNotContain($"Directory {token} 01", filtered);
+        Assert.Contains("No restaurants match your search", await client.GetStringAsync($"/restaurants?q={token}&area=Missing"));
+    }
+
+    [Fact]
+    public async Task Directory_OversizedFilter_ShowsSafeValidation()
+    {
+        using var client = Client();
+        var html = await client.GetStringAsync("/restaurants?q=" + new string('a', 161));
+        Assert.Contains("Use up to 160 characters", html);
+        Assert.DoesNotContain("Npgsql", html);
+    }
 
     public async Task InitializeAsync()
     {
@@ -95,7 +180,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
         Assert.Contains("href=\"/restaurants\"", html);
         Assert.Contains("href=\"/account\"", html);
         Assert.Contains("href=\"/logout\"", html);
-        Assert.Contains("Restaurant browsing is coming soon", await client.GetStringAsync("/restaurants"));
+        Assert.Contains("Find your neighborhood favorites.", await client.GetStringAsync("/restaurants"));
     }
 
     [Theory]
@@ -736,6 +821,8 @@ public sealed class SessionHttpTests : IAsyncLifetime
 
         await using (var scope = factory.Services.CreateAsyncScope())
         {
+            await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Restaurants
+                .Where(row => directoryIds.Contains(row.Id)).ExecuteDeleteAsync();
             await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().Users
                 .Where(user => user.Email == email).ExecuteDeleteAsync();
             if (extraUserId is Guid otherUserId)

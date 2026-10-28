@@ -34,3 +34,5 @@ This task provides no public role-grant endpoint, default admin accounts, manage
 ## Verification
 
 HTTP tests exercise the complete 3×3 role/page matrix and anonymous route access using real Identity cookies. Application tests cover malformed/unauthenticated role claims, ownership mismatch and missing records. A PostgreSQL integration test proves that changing an order ID denies a Customer while explicit Admin access is allowed. Test data is isolated in the dedicated `_tests` database and cleaned by its owning fixture.
+
+The /restaurants directory is public for all actors. Its Infrastructure reader always scopes to approved/active/non-deleted records, regardless of caller role or filter values. No private owner/user fields are projected.

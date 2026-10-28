@@ -1,8 +1,90 @@
 @page "/restaurants"
+@using LocalEats.Application.Restaurants
+@attribute [StreamRendering]
+@inject RestaurantDirectoryService Directory
+@inject ILogger<Restaurants> Logger
 
-<PageTitle>Restaurants | LocalEats</PageTitle>
-<section class="auth-page">
-    <h1>Restaurant browsing is coming soon</h1>
-    <p>We’re preparing the restaurant directory. Menus and ordering are not available yet.</p>
-    <a href="/dashboard">Back to your dashboard</a>
+<PageTitle>Find your next meal | LocalEats</PageTitle>
+<section class="directory" aria-labelledby="directory-heading">
+    <header class="directory-intro">
+        <p class="eyebrow">Good food, close to home</p>
+        <h1 id="directory-heading">Find your neighborhood favorites.</h1>
+        <p>Explore local restaurants by name, area, or cuisine.</p>
+        <p class="directory-note">Development sample catalog · Menus and ordering are coming in the next phases.</p>
+    </header>
+    <form action="/restaurants" method="get" class="directory-filters" aria-label="Restaurant filters">
+        <div><label for="search-name">Restaurant name</label><input id="search-name" name="q" value="@Search" maxlength="160" placeholder="Try Dhaka Bites" /></div>
+        <div><label for="search-area">Area</label><input id="search-area" name="area" value="@Area" maxlength="120" placeholder="e.g. Dhanmondi" /></div>
+        <div><label for="search-cuisine">Cuisine</label><input id="search-cuisine" name="cuisine" value="@Cuisine" maxlength="120" placeholder="e.g. Burgers" /></div>
+        <button type="submit" class="button-link">Find restaurants</button>
+        <a href="/restaurants">Clear filters</a>
+    </form>
+    @if (loading)
+    {
+        <p role="status">Finding restaurants…</p>
+    }
+    else if (error is not null)
+    {
+        <section class="directory-empty" role="alert"><h2>Unable to show restaurants</h2><p>@error</p><a href="@PageUrl(Page)">Try again</a></section>
+    }
+    else if (result is not null)
+    {
+        <p class="results-summary" role="status">@result.Total @(result.Total == 1 ? "restaurant" : "restaurants") found · Page @result.Page of @result.TotalPages</p>
+        @if (result.Items.Count == 0)
+        {
+            <section class="directory-empty"><h2>No restaurants match your search</h2><p>Try another name, area, or cuisine, or clear your filters.</p><a href="/restaurants">Show all restaurants</a></section>
+        }
+        else
+        {
+            <div class="restaurant-grid">
+                @foreach (var restaurant in result.Items)
+                {
+                    <article class="restaurant-card">
+                        <div class="restaurant-art" aria-hidden="true">Local favorites</div>
+                        <div class="restaurant-details">
+                            <span class="opening-status">@(restaurant.IsOpen ? "Open" : "Closed")</span>
+                            <h2>@restaurant.Name</h2>
+                            <p class="restaurant-meta">@(restaurant.Cuisine ?? "Cuisine to be added") · @(restaurant.Area ?? "Area to be added")</p>
+                            <p>@restaurant.Description</p>
+                            <p class="menu-note">Menu coming soon</p>
+                        </div>
+                    </article>
+                }
+            </div>
+            <nav class="directory-pagination" aria-label="Restaurant pages">
+                @if (result.Page > 1) { <a href="@PageUrl(result.Page - 1)">Previous</a> }
+                <span aria-current="page">Page @result.Page of @result.TotalPages</span>
+                @if (result.Page < result.TotalPages) { <a href="@PageUrl(result.Page + 1)">Next</a> }
+            </nav>
+        }
+    }
 </section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "q")] public string? Search { get; set; }
+    [SupplyParameterFromQuery(Name = "area")] public string? Area { get; set; }
+    [SupplyParameterFromQuery(Name = "cuisine")] public string? Cuisine { get; set; }
+    [SupplyParameterFromQuery(Name = "page")] public string? PageInput { get; set; }
+    private int Page => int.TryParse(PageInput, out var page) ? page : 1;
+    private RestaurantDirectoryResult? result;
+    private string? error;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        try
+        {
+            result = await Directory.SearchAsync(new(Search, Area, Cuisine, Page));
+            error = result.Error;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Restaurant directory failed with error type {ErrorType}.", exception.GetType().Name);
+            error = "We couldn’t load restaurants. Please try again.";
+        }
+        finally { loading = false; }
+    }
+
+    private string PageUrl(int page) => $"/restaurants?q={Uri.EscapeDataString(Search ?? string.Empty)}&area={Uri.EscapeDataString(Area ?? string.Empty)}&cuisine={Uri.EscapeDataString(Cuisine ?? string.Empty)}&page={Math.Max(1, page)}";
+}

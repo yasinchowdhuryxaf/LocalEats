@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**Migration endpoint safeguard fixed; TASK-016 sample seeding complete. TASK-017 restaurant directory is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-017 restaurant directory complete. TASK-018 restaurant detail/menu page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-017 - Build restaurant directory (not started)**
+**TASK-018 - Build restaurant detail and menu page (not started)**
 
 ### Current task objective
 
-Build the public restaurant directory in TASK-017 with approved/active/deletion filters, search, pagination and UI states. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Build the public restaurant detail/menu page in TASK-018; preserve visibility and availability checks. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-016 complete. TASK-017 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-017 complete. TASK-018 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-017 - Build restaurant directory.
-2. TASK-018 - Build restaurant detail and menu page.
+1. TASK-018 - Build restaurant detail and menu page.
+2. TASK-019 - Build basket.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-017: Build restaurant directory.
-Implement only the directory task; do not implement basket, checkout or manager tools.
+We are starting TASK-018: Build restaurant detail and menu page.
+Implement only restaurant detail/menu scope; do not implement basket, checkout or manager tools.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -471,3 +471,14 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Both LocalEats development hosts started and /health returned 200 Healthy. Existing catalog stayed at 2 restaurants, 2 categories and 2 items. No ARAM PROJECT files/documents, services or containers were accessed or changed. Only workspace-owned LocalEats hosts were stopped/restarted for the build.
 - Changed factory, seeder, database/seed tests, setup/readme/architecture/test docs and added docs/SEED_DATA.md. Hosted CI and MY_PROJECT sync/hash verification follow. Next TASK-017; no directory UI implemented yet.
 - Migration safeguard and TASK-016 hosted CI passed every step: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40760661826 . Commits 677a107 (guard) and ed12751 (seeding) are published on main. Desktop MY_PROJECT refreshed; all 144 portable files matched SHA-256 hashes. Final memory copied after this entry. Existing action-runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - TASK-017 public restaurant directory
+
+- Replaced /restaurants placeholder with a public static SSR directory: labelled GET name/area/cuisine filters, results count, clear action, open/closed cards, six-item pagination, streamed loading, helpful empty state, server filter validation and safe error/retry. Menu details remain TASK-018; no dead card links or ordering actions are introduced. Artwork is decorative local CSS rather than unverified photos.
+- Added Application query/card/result/interface/service and Infrastructure no-tracking projected reader. Public queries always require approved, active and not soft-deleted; closed restaurants remain visible. Case-insensitive partial name search and exact area/cuisine matches execute in SQL. Stable name/ID ordering and count-derived page clamping avoid unbounded reads and extreme page offsets. Invalid page strings safely fall back to page 1.
+- Linked the directory from shared navigation and home; updated dashboard copy. No schema, migration or dependency change. API transport remains unchanged; Web uses the existing approved Application DI boundary.
+- Added 6 real HTTP/PostgreSQL cases: seven visible versus three hidden rows, pagination, combined case-insensitive filters, closed visibility, empty results, oversized filter validation, invalid/negative/overflow page values and injected provider-read failure without details. Updated the former coming-soon test to assert the real directory.
+- Formatting passed; Release build passed with zero warnings/errors; all 137 tests passed (8 Domain, 38 Application, 91 HTTP/database), zero failures/skips. Both local Web/API health checks returned 200. E2E automation remains TASK-045.
+- Showed localhost visibly to user and demonstrated name search, combined Uttara/Bangladeshi filter, no-results feedback and clearing filters. Layout checked at 375/768/1440 with no horizontal overflow; tablet uses two columns. Final screenshot outputs/restaurant-directory.png is ignored generated proof. Browser tab marked deliverable and left at /restaurants; normal Web remains running at http://127.0.0.1:5015/ .
+- Recorded user preference in AGENTS.md: show each finished UI slice on localhost with an explanation and keep final preview available. All work stayed within LocalEats and its authorized MY_PROJECT copy; no ARAM PROJECT resource was accessed or modified.
+- Hosted CI and portable sync/hash verification follow. Next TASK-018; no menu/basket functionality is claimed here.

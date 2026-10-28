@@ -1,3 +1,4 @@
+using LocalEats.Application.Restaurants;
 using LocalEats.Application.Users;
 using LocalEats.Application.Users.Profile;
 using LocalEats.Infrastructure;
@@ -13,6 +14,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<RestaurantDirectoryService>();
 if (!builder.Environment.IsDevelopment())
 {
     builder.Services.ConfigureApplicationCookie(options =>

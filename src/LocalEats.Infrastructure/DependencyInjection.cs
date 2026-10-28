@@ -1,3 +1,4 @@
+using LocalEats.Application.Restaurants;
 using LocalEats.Application.Security;
 using LocalEats.Application.Users;
 using LocalEats.Application.Users.Profile;
@@ -16,6 +17,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddScoped<IRestaurantDirectoryReader, RestaurantDirectoryReader>();
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
 

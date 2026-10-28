@@ -1,3 +1,5 @@
+@using LocalEats.Application.Basket
+@inject BasketService Basket
 @using LocalEats.Application.Security
 
 <a href="/">Home</a>
@@ -24,7 +26,7 @@ else
     <a href="/login">Sign in</a>
     <a href="/register">Create account</a>
 }
-<button type="button" disabled title="Basket will be available in a later task">Basket (coming soon)</button>
+<span class="basket-count" aria-label="Basket item count">Basket (@Basket.Snapshot().ItemCount)</span>
 
 @code {
     [CascadingParameter]

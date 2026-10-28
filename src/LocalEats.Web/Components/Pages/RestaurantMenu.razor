@@ -1,3 +1,5 @@
+@using LocalEats.Application.Basket
+@inject BasketService Basket
 @page "/restaurants/{Slug}"
 @using System.Globalization
 @using LocalEats.Application.Restaurants
@@ -26,7 +28,7 @@
             <p>@menu.Description</p>
             <p>@(menu.Address ?? "Address to be added") · @(menu.Area ?? "Area to be added")</p>
             @if (!menu.IsOpen) { <p class="menu-notice">This restaurant is currently closed. You can still browse its menu.</p> }
-            <p>Menu preview · Ordering is not available yet.</p>
+            <p>Add items to your basket. Checkout is not available yet.</p>
         </header>
         @if (menu.Items.Count == 0)
         {
@@ -34,6 +36,7 @@
         }
         else
         {
+            <EditForm Model="AddInput" OnSubmit="AddAsync" FormName="basket-add" Enhance="false">
             @foreach (var category in menu.Items.GroupBy(item => item.CategoryId))
             {
                 <section class="menu-category" aria-label="@category.First().Category">
@@ -46,12 +49,13 @@
                             <p>@item.Description</p>
                             <p class="menu-price">BDT @((item.PriceMinor / 100m).ToString("N2", CultureInfo.InvariantCulture))</p>
                             @if (!item.IsAvailable) { <p class="menu-availability">Currently unavailable</p> }
-                            <button type="button" disabled title="Ordering is not available yet">@(!item.IsAvailable ? "Unavailable" : !menu.IsOpen ? "Restaurant closed" : "Add to basket (coming soon)")</button>
+                            <button type="submit" name="AddInput.ItemId" value="@item.ItemId" disabled="@(!item.IsAvailable || !menu.IsOpen)">@(!item.IsAvailable ? "Unavailable" : !menu.IsOpen ? "Restaurant closed" : "Add to basket")</button>
                         </article>
                     }
                     </div>
                 </section>
             }
+            </EditForm>
             <nav class="menu-pagination" aria-label="Menu pages">
                 @if (menu.Page > 1) { <a href="@MenuUrl(menu.Page - 1)">Previous</a> }
                 <span aria-current="page">Page @menu.Page of @menu.TotalPages</span>
@@ -61,6 +65,38 @@
     }
 </section>
 
+@if (menu is not null && !failed)
+{
+<section id="menu-basket" class="restaurant-menu basket-preview" aria-labelledby="basket-heading">
+    <h2 id="basket-heading">Your basket</h2>
+    @if (basketMessage is not null) { <p role="status">@basketMessage</p> }
+    @if (snapshot.Lines.Count == 0)
+    {
+        <p>Your basket is empty. Add an available item from an open restaurant.</p>
+    }
+    else
+    {
+        <p>@snapshot.Lines[0].RestaurantName</p>
+        <EditForm Model="ChangeInput" OnSubmit="ChangeAsync" FormName="basket-change" Enhance="false">
+            @foreach (var line in snapshot.Lines)
+            {
+                <article class="basket-line">
+                    <h3>@line.Name</h3>
+                    <p>Quantity: @line.Quantity · BDT @((line.TotalMinor / 100m).ToString("N2", CultureInfo.InvariantCulture))</p>
+                    <div class="basket-actions">
+                        <button type="submit" name="ChangeInput.Operation" value="@($"decrease:{line.ItemId}")" aria-label="Decrease quantity of @line.Name">−</button>
+                        <button type="submit" name="ChangeInput.Operation" value="@($"increase:{line.ItemId}")" aria-label="Increase quantity of @line.Name">+</button>
+                        <button type="submit" name="ChangeInput.Operation" value="@($"remove:{line.ItemId}")">Remove @line.Name</button>
+                    </div>
+                </article>
+            }
+            <p><strong>Display subtotal: BDT @((snapshot.SubtotalMinor / 100m).ToString("N2", CultureInfo.InvariantCulture))</strong></p>
+            <button type="submit" name="ChangeInput.Operation" value="clear">Clear basket</button>
+        </EditForm>
+        <p>Prices and availability will be checked again at checkout. This temporary basket expires after inactivity or an app restart.</p>
+    }
+</section>
+}
 @code {
     [Parameter] public string Slug { get; set; } = string.Empty;
     [SupplyParameterFromQuery(Name = "page")] public string? PageInput { get; set; }
@@ -68,12 +104,70 @@
     private int Page => int.TryParse(PageInput, out var page) ? page : 1;
     private RestaurantMenuPage? menu;
     private bool failed;
+    private BasketSnapshot snapshot = new([]);
+    private string? basketMessage;
+    [SupplyParameterFromForm(FormName = "basket-add")] public AddItemInput AddInput { get; set; }
+    [SupplyParameterFromForm(FormName = "basket-change")] public ChangeBasketInput ChangeInput { get; set; }
+    public RestaurantMenu() { AddInput = new(); ChangeInput = new(); }
+    public sealed class AddItemInput { public Guid ItemId { get; set; } }
+    public sealed class ChangeBasketInput { public string Operation { get; set; } = string.Empty; }
+
+    private async Task AddAsync()
+    {
+        BasketChange result;
+        try { result = await Basket.AddAsync(AddInput.ItemId); }
+        catch (Exception exception)
+        {
+            Logger.LogError("Basket add failed with error type {ErrorType}.", exception.GetType().Name);
+            result = new(false, "We couldn’t update your basket. Please try again.");
+        }
+        FinishBasketChange(result);
+    }
+
+    private async Task ChangeAsync()
+    {
+        BasketChange result = new(false, "Choose a valid basket action.");
+        var operation = ChangeInput.Operation ?? string.Empty;
+        try
+        {
+            if (operation == "clear") result = Basket.Clear();
+            else if (operation.Length <= 64)
+            {
+                var parts = operation.Split(':', 2);
+                if (parts.Length == 2 && Guid.TryParse(parts[1], out var id))
+                    result = parts[0] switch
+                    {
+                        "increase" => await Basket.IncreaseAsync(id),
+                        "decrease" => Basket.Decrease(id),
+                        "remove" => Basket.Remove(id),
+                        _ => result
+                    };
+            }
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Basket change failed with error type {ErrorType}.", exception.GetType().Name);
+            result = new(false, "We couldn’t update your basket. Please try again.");
+        }
+        FinishBasketChange(result);
+    }
+
+    private void FinishBasketChange(BasketChange result)
+    {
+        HttpContext?.Session.SetString("BasketMessage", result.Message);
+        HttpContext?.Response.Redirect(MenuUrl(Page));
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         try
         {
+            AddInput ??= new();
+            ChangeInput ??= new();
             failed = false;
+            snapshot = Basket.Snapshot();
+            basketMessage = HttpContext?.Session.GetString("BasketMessage");
+            HttpContext?.Session.Remove("BasketMessage");
             menu = await Menus.GetAsync(Slug, Page, HttpContext?.RequestAborted ?? CancellationToken.None);
             if (menu is null && HttpContext?.Response.HasStarted == false) HttpContext.Response.StatusCode = 404;
         }

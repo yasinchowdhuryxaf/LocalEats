@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-018 restaurant details/menu complete. TASK-019 basket state is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-019 basket state complete. TASK-020 dedicated basket page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-019 - Implement basket state (not started)**
+**TASK-020 - Build basket page (not started)**
 
 ### Current task objective
 
-Implement basket state in TASK-019 with one-restaurant and availability rules; do not implement checkout yet. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Build the dedicated basket page in TASK-020 using the existing basket service; checkout remains later. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-018 complete. TASK-019 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-019 complete. TASK-020 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-019 - Implement basket state.
-2. TASK-020 - Build basket page.
+1. TASK-020 - Build basket page.
+2. TASK-021 - Build checkout page.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-019: Implement basket state.
-Implement only basket-state scope; do not implement checkout or manager tools.
+We are starting TASK-020: Build basket page.
+Implement only the basket page; do not implement checkout or manager tools.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -495,3 +495,13 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - No schema, migration, dependency or user-role change. No ARAM PROJECT resource accessed/modified. Existing local data remains unchanged; menu fixtures clean only their own rows in _tests. Real basket/checkout and E2E automation remain later tasks.
 - Hosted CI and MY_PROJECT source/hash sync follow. Next TASK-019 basket state; Phase 5 begins.
 - TASK-018 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40764984396 . Feature commit 54b8d38 is published on main. Desktop MY_PROJECT refreshed; all 158 portable files matched SHA-256 hashes. Final memory copied after this entry. Live menu remains a visible deliverable at http://127.0.0.1:5015/restaurants/dhaka-bites . Existing CI action-runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - TASK-019 browser-session basket state
+
+- Added Application BasketState/service/snapshot/product/store contracts, Infrastructure canonical public product reader, Web session-bound in-memory state store, static SSR basket forms/preview, header count and logout clearing. No database schema/migration or package change.
+- Guest baskets are allowed before sign-in as the light MVP default. Cookies are opaque/protected, HttpOnly/Lax and Secure outside Development. State is per browser session, lasts 30 minutes of sliding inactivity and is lost on restart/eviction; no account-owned/durable order is implied. Shared atomic storage is required before multi-instance hosting (ADR 0003).
+- Add/increase re-read canonical item prices and public restaurant/category/item availability; browser price/restaurant fields are ignored. Enforced one restaurant, max 20 per item, max 50 distinct items, checked subtotal arithmetic and overflow-safe prices. Decrease-to-zero removes a line; final removal/clear resets restaurant restriction. Locked mutations/snapshots prevent concurrent quantity-limit bypass.
+- All writes use antiforgery-protected static POST forms with PRG. Server-side result messages are session-local; no basket owner ID is accepted. Session-specific pages use no-store caching. Logout clears this browser basket without touching others. Subtotals remain display snapshots; final checkout revalidation is still required.
+- Added 8 Application cases and 6 HTTP/PostgreSQL cases covering add/change/remove totals, limits, concurrency, cross-restaurant rejection, per-client isolation, server price despite overposting, unavailable/closed/hidden rejection, antiforgery, logout and no-store. Final formatting passed; Release build passed with zero warnings/errors; all 159 tests passed (8 Domain, 46 Application, 105 HTTP/database), no failures/skips. Both host health endpoints returned 200.
+- User explicitly chose to KEEP Dhaka Bites status unchanged. Neither existing restaurant status/data was modified. Live localhost demonstrates empty basket, header Basket (0) and closed-item disabled control; open-item workflows were exercised only in isolated fixtures. Checked empty preview at 375/768 without horizontal overflow. Screenshot outputs/basket-state.png is ignored generated proof; menu tab remains a deliverable at http://127.0.0.1:5015/restaurants/dhaka-bites .
+- No ARAM PROJECT resource accessed or changed. Dedicated /basket page is not implemented yet (TASK-020); no checkout/order creation is claimed. Hosted CI and MY_PROJECT sync/hash verification follow.

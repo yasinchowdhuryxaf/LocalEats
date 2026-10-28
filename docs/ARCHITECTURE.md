@@ -751,3 +751,5 @@ TASK-016: development sample inserts are atomic and serialized by a PostgreSQL a
 TASK-017: Web SSR GET directory → Application RestaurantDirectoryService → IRestaurantDirectoryReader → Infrastructure projected SQL query. Filtering and pagination execute server-side; no EF types/database queries are placed in components. No additional HTTP API is introduced for this slice.
 
 TASK-018: restaurant details/menu use Web static SSR → RestaurantMenuService → IRestaurantMenuReader → projected SQL. Metadata lookup is visibility-scoped before menu reads; active-category items are paged in batches of 20. Non-streamed rendering keeps correct 404/503 responses. Sample display currency is BDT; payment/checkout remain out of scope.
+
+TASK-019: static SSR basket POST → Application BasketService/locked BasketState → Infrastructure canonical product reader. Web SessionBasketStore binds temporary in-process cache state to the protected browser session ID. No database basket or interactive global render mode is added. See docs/decisions/0003-browser-session-basket.md for lifetime, limits and future shared-store requirements.

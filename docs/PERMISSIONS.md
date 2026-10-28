@@ -38,3 +38,5 @@ HTTP tests exercise the complete 3×3 role/page matrix and anonymous route acces
 The /restaurants directory is public for all actors. Its Infrastructure reader always scopes to approved/active/non-deleted records, regardless of caller role or filter values. No private owner/user fields are projected.
 
 TASK-018: /restaurants/{slug} is public only for approved/active/non-deleted restaurants. Unknown/private/invalid slugs return the same 404 screen, without leaking restaurant or item data. Only active categories are projected. Unavailable items remain visible with disabled controls; no basket-add endpoint exists yet.
+
+TASK-019: guest/session baskets are scoped only to the current protected browser session; caller-supplied owner/restaurant/price values do not choose state or pricing. Add/increase validate public item/category/restaurant availability on the server. Logout clears only this browser's basket. Basket mutation forms require antiforgery. Checkout will separately require Customer access; no checkout exists yet.

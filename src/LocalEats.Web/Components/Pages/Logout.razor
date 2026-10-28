@@ -1,3 +1,4 @@
+@inject LocalEats.Application.Basket.BasketService Basket
 @page "/logout"
 @using Microsoft.AspNetCore.Authorization
 @using LocalEats.Application.Users
@@ -27,6 +28,7 @@
 
     private async Task SignOutAsync()
     {
+        Basket.Clear();
         await LoginService.SignOutAsync();
         HttpContext?.Response.Redirect("/login");
     }

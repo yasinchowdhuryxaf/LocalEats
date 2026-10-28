@@ -25,6 +25,109 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
 
+    private async Task<Guid> MenuItemId(string slug, int number = 1)
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>().MenuItems
+            .Where(item => item.MenuCategory.Restaurant.Slug == slug && item.Name == $"Menu item {number:D2}")
+            .Select(item => item.Id).SingleAsync();
+    }
+
+    private static async Task<Dictionary<string, string>> BasketFields(HttpClient client, string path, string handler)
+    {
+        var html = await client.GetStringAsync(path);
+        var form = Regex.Matches(html, "<form\\b.*?</form>", RegexOptions.Singleline).Cast<Match>()
+            .Select(match => match.Value).Single(value => value.Contains($"value=\"{handler}\"", StringComparison.Ordinal));
+        var fields = new Dictionary<string, string>();
+        foreach (Match match in Regex.Matches(form, "<input[^>]*type=\"hidden\"[^>]*>"))
+        {
+            var name = Regex.Match(match.Value, "name=\"([^\"]*)\"").Groups[1].Value;
+            var value = Regex.Match(match.Value, "value=\"([^\"]*)\"").Groups[1].Value;
+            fields[WebUtility.HtmlDecode(name)] = WebUtility.HtmlDecode(value);
+        }
+        Assert.Contains("__RequestVerificationToken", fields.Keys);
+        return fields;
+    }
+
+    private static async Task AddBasketItem(HttpClient client, string slug, Guid itemId)
+    {
+        var path = $"/restaurants/{slug}";
+        var fields = await BasketFields(client, path, "basket-add");
+        fields["AddInput.ItemId"] = itemId.ToString();
+        fields["AddInput.PriceMinor"] = "1";
+        fields["AddInput.RestaurantId"] = Guid.NewGuid().ToString();
+        Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync(path, new FormUrlEncodedContent(fields))).StatusCode);
+    }
+
+    [Fact]
+    public async Task Basket_Anonymous_AddChangeRemoveAndIsolation_UsesServerPrice()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        var id = await MenuItemId(slug);
+        using var client = Client();
+        using var other = Client();
+        await AddBasketItem(client, slug, id);
+        var page = await client.GetAsync($"/restaurants/{slug}");
+        Assert.True(page.Headers.CacheControl?.NoStore);
+        var html = await page.Content.ReadAsStringAsync();
+        Assert.Contains("Basket (1)", html);
+        Assert.Contains("Display subtotal: BDT 123.46", html);
+        Assert.Contains("Your basket is empty", await other.GetStringAsync($"/restaurants/{slug}"));
+        foreach (var operation in new[] { $"increase:{id}", $"decrease:{id}", $"remove:{id}" })
+        {
+            var fields = await BasketFields(client, $"/restaurants/{slug}", "basket-change");
+            fields["ChangeInput.Operation"] = operation;
+            Assert.Equal(HttpStatusCode.Redirect, (await client.PostAsync($"/restaurants/{slug}", new FormUrlEncodedContent(fields))).StatusCode);
+            html = await client.GetStringAsync($"/restaurants/{slug}");
+            Assert.Contains(operation.StartsWith("increase", StringComparison.Ordinal) ? "Basket (2)" : operation.StartsWith("decrease", StringComparison.Ordinal) ? "Basket (1)" : "Your basket is empty", html);
+        }
+    }
+
+    [Theory]
+    [InlineData("open", 0)]
+    [InlineData("closed", 1)]
+    [InlineData("inactive", 1)]
+    public async Task Basket_UnavailableProduct_CannotBeAddedFromAnotherPublicMenu(string state, int number)
+    {
+        var publicSlug = await CreateMenuFixtureAsync("open", 2);
+        var rejectedSlug = await CreateMenuFixtureAsync(state, 2);
+        using var client = Client();
+        await AddBasketItem(client, publicSlug, await MenuItemId(rejectedSlug, number));
+        var html = await client.GetStringAsync($"/restaurants/{publicSlug}");
+        Assert.Contains("Your basket is empty", html);
+        Assert.Contains("This item is unavailable or the restaurant is closed", html);
+    }
+
+    [Fact]
+    public async Task Basket_SecondRestaurant_RejectsAndLogoutClears()
+    {
+        var first = await CreateMenuFixtureAsync("open", 2);
+        var second = await CreateMenuFixtureAsync("open", 2);
+        using var client = Client();
+        await Login(client, email, Password);
+        await AddBasketItem(client, first, await MenuItemId(first));
+        await AddBasketItem(client, second, await MenuItemId(second));
+        var html = await client.GetStringAsync($"/restaurants/{second}");
+        Assert.Contains("Your basket belongs to another restaurant", html);
+        Assert.Contains("Basket (1)", html);
+        var fields = await FormFields(client, "/logout");
+        await client.PostAsync("/logout", new FormUrlEncodedContent(fields));
+        Assert.Contains("Your basket is empty", await client.GetStringAsync($"/restaurants/{first}"));
+    }
+
+    [Fact]
+    public async Task Basket_PostWithoutAntiforgery_IsRejected()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        using var client = Client();
+        var response = await client.PostAsync($"/restaurants/{slug}", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["_handler"] = "basket-add",
+            ["AddInput.ItemId"] = (await MenuItemId(slug)).ToString()
+        }));
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private async Task<string> CreateMenuFixtureAsync(string state, int itemCount)
     {
         await using var scope = Factory.Services.CreateAsyncScope();
@@ -91,7 +194,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
         Assert.Contains("BDT 123.45", html);
         Assert.Contains("Currently unavailable", html);
         Assert.Matches("<button[^>]*disabled[^>]*>Unavailable</button>", html);
-        Assert.Matches("<button[^>]*disabled[^>]*>Add to basket \\(coming soon\\)</button>", html);
+        Assert.Contains(">Add to basket</button>", html);
         Assert.DoesNotContain("Hidden category", html);
         Assert.DoesNotContain("Hidden item", html);
         Assert.DoesNotContain("Menu item 20", html);
@@ -275,7 +378,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
         Assert.Contains("href=\"/login\"", html);
         Assert.DoesNotContain("href=\"/manager\"", html);
         Assert.DoesNotContain("href=\"/admin\"", html);
-        Assert.Contains("Basket (coming soon)", html);
+        Assert.Contains("Basket (0)", html);
     }
 
     [Fact]

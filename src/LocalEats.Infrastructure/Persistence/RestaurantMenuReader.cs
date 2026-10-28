@@ -19,7 +19,7 @@ public sealed class RestaurantMenuReader(LocalEatsDbContext db) : IRestaurantMen
         var items = await query.OrderBy(item => item.MenuCategory.SortOrder).ThenBy(item => item.MenuCategory.Name)
             .ThenBy(item => item.MenuCategoryId).ThenBy(item => item.Name).ThenBy(item => item.Id)
             .Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(item => new MenuEntry(item.MenuCategoryId, item.MenuCategory.Name, item.Name, item.Description, item.PriceMinor, item.IsAvailable))
+            .Select(item => new MenuEntry(item.Id, item.MenuCategoryId, item.MenuCategory.Name, item.Name, item.Description, item.PriceMinor, item.IsAvailable))
             .ToListAsync(cancellationToken);
         return new RestaurantMenuPage(restaurant.Name, restaurant.Description, restaurant.Address, restaurant.Area, restaurant.Cuisine,
             restaurant.IsOpen, items, total, page, pageSize);

@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-019 - Implement basket state
+TASK-020 - Build basket page
 ```
 
 
@@ -231,4 +231,8 @@ Open http://127.0.0.1:5015/restaurants. Search by name, filter by exact area/cui
 
 ## Restaurant menus (TASK-018)
 
-Open /restaurants and choose View menu. Public restaurant details show active menu categories, BDT sample prices, availability and closed status. Menus paginate 20 items at a time. Missing/private restaurants return safe 404s. Basket controls are disabled placeholders until TASK-019. No payment or order creation is implemented.
+Open /restaurants and choose View menu. Public restaurant details show active menu categories, BDT sample prices, availability and closed status. Menus paginate 20 items at a time. Missing/private restaurants return safe 404s. Available items at open restaurants can be added to a browser-session basket. Unavailable/closed items remain disabled. No payment or order creation is implemented.
+
+## Basket state (TASK-019)
+
+Open a restaurant menu to see the basket preview and header count. Available items at open restaurants support add/increase/decrease/remove/clear; one restaurant per basket. Current development samples remain closed at the user's request, so their add controls stay disabled. The temporary basket expires after 30 minutes inactivity or restart and clears on logout. Dedicated /basket page is TASK-020; checkout is not implemented. See ADR 0003 for limits and hosting assumptions.

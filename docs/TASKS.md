@@ -298,13 +298,13 @@ Goal: allow a customer to create a valid order from one restaurant.
 
 ## TASK-019: Implement basket state
 
-- [ ] Add basket state service.
-- [ ] Add menu item to basket.
-- [ ] Increase and decrease quantity.
-- [ ] Remove item.
-- [ ] Calculate display subtotal.
-- [ ] Prevent items from different restaurants in one basket.
-- [ ] Add empty basket state.
+- [x] Add basket state service.
+- [x] Add menu item to basket.
+- [x] Increase and decrease quantity.
+- [x] Remove item.
+- [x] Calculate display subtotal.
+- [x] Prevent items from different restaurants in one basket.
+- [x] Add empty basket state.
 
 ## TASK-020: Build basket page
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 5 - Basket and Order Creation
-- Current task: TASK-019
-- Branch: `codex/task-018-restaurant-menu`
+- Current task: TASK-020
+- Branch: `codex/task-019-basket-state`
 - Status: [ ] Not started
-- Last completed task: TASK-018 - Build restaurant detail and menu page
-- Next task: TASK-019 - Implement basket state
+- Last completed task: TASK-019 - Implement basket state
+- Next task: TASK-020 - Build basket page
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

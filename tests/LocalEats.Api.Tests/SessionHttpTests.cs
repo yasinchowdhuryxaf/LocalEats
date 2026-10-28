@@ -25,6 +25,71 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
 
+    [Theory]
+    [InlineData("CashOnDelivery", "Sample address")]
+    [InlineData("PayAtPickup", "")]
+    public async Task Checkout_ValidReview_UsesServerSummaryWithoutCreatingOrder(string method, string address)
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        using var client = Client();
+        await AddBasketItem(client, slug, await MenuItemId(slug));
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/checkout");
+        fields["Input.Name"] = "Checkout Customer";
+        fields["Input.Phone"] = "+8801712345678";
+        fields["Input.Address"] = address;
+        fields["Input.Notes"] = "Sample notes";
+        fields["Input.PaymentMethod"] = method;
+        fields["Input.TotalMinor"] = "1";
+        fields["Input.UserId"] = Guid.NewGuid().ToString();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var before = await db.Orders.CountAsync();
+        var response = await client.PostAsync("/checkout", new FormUrlEncodedContent(fields));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Your details are valid", html);
+        Assert.Contains("Current item subtotal: BDT 123.46", html);
+        Assert.Equal(before, await db.Orders.CountAsync());
+        Assert.Contains("Basket (1)", await client.GetStringAsync("/basket"));
+    }
+
+    [Fact]
+    public async Task Checkout_InvalidDetailsAndMissingToken_AreRejected()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        using var client = Client();
+        await AddBasketItem(client, slug, await MenuItemId(slug));
+        await Login(client, email, Password);
+        var fields = await FormFields(client, "/checkout");
+        fields["Input.Name"] = " "; fields["Input.Phone"] = "bad";
+        fields["Input.PaymentMethod"] = "Card";
+        var html = await (await client.PostAsync("/checkout", new FormUrlEncodedContent(fields))).Content.ReadAsStringAsync();
+        Assert.Contains("Choose Cash on Delivery or Pay at Pickup", html);
+        Assert.DoesNotContain("Your details are valid", html);
+        fields.Remove("__RequestVerificationToken");
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsync("/checkout", new FormUrlEncodedContent(fields))).StatusCode);
+    }
+
+    [Fact]
+    public async Task Checkout_PriceAndAvailabilityChanged_RechecksCatalog()
+    {
+        var slug = await CreateMenuFixtureAsync("open", 2);
+        var id = await MenuItemId(slug);
+        using var client = Client();
+        await AddBasketItem(client, slug, id);
+        await Login(client, email, Password);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        await db.MenuItems.Where(item => item.Id == id).ExecuteUpdateAsync(update => update.SetProperty(item => item.PriceMinor, 25000));
+        Assert.Contains("Current item subtotal: BDT 250.00", await client.GetStringAsync("/checkout"));
+        await db.MenuItems.Where(item => item.Id == id).ExecuteUpdateAsync(update => update.SetProperty(item => item.IsAvailable, false));
+        var html = await client.GetStringAsync("/checkout");
+        Assert.Contains("An item is unavailable or its restaurant is closed", html);
+        Assert.Matches("<button[^>]*disabled[^>]*>Review checkout</button>", html);
+    }
+
     [Fact]
     public async Task BasketPage_EmptyGuest_ShowsBrowseActionAndNoStore()
     {
@@ -50,7 +115,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
         Assert.Contains("Menu item 01", html);
         Assert.Contains("Unit price: BDT 123.46", html);
         Assert.Contains("Display subtotal: BDT 123.46", html);
-        Assert.Matches("<button[^>]*disabled[^>]*>Checkout", html);
+        Assert.Contains("href=\"/checkout\"", html);
         Assert.DoesNotContain("Private menu fixture", await other.GetStringAsync("/basket"));
         foreach (var operation in new[] { $"increase:{id}", $"decrease:{id}", $"remove:{id}" })
         {
@@ -738,6 +803,9 @@ public sealed class SessionHttpTests : IAsyncLifetime
     [Theory]
     [InlineData(ApplicationRoles.Customer, "/session/customer", true)]
     [InlineData(ApplicationRoles.Customer, "/dashboard", true)]
+    [InlineData(ApplicationRoles.Customer, "/checkout", true)]
+    [InlineData(ApplicationRoles.Manager, "/checkout", false)]
+    [InlineData(ApplicationRoles.Admin, "/checkout", false)]
     [InlineData(ApplicationRoles.Manager, "/dashboard", false)]
     [InlineData(ApplicationRoles.Admin, "/dashboard", false)]
     [InlineData(ApplicationRoles.Customer, "/manager", false)]
@@ -830,6 +898,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
     [Theory]
     [InlineData("/session/customer")]
     [InlineData("/dashboard")]
+    [InlineData("/checkout")]
     [InlineData("/manager")]
     [InlineData("/manager/restaurant")]
     [InlineData("/manager/menu")]

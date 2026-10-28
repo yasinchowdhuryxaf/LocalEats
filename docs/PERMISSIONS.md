@@ -40,3 +40,5 @@ The /restaurants directory is public for all actors. Its Infrastructure reader a
 TASK-018: /restaurants/{slug} is public only for approved/active/non-deleted restaurants. Unknown/private/invalid slugs return the same 404 screen, without leaking restaurant or item data. Only active categories are projected. Unavailable items remain visible with disabled controls; no basket-add endpoint exists yet.
 
 TASK-019: guest/session baskets are scoped only to the current protected browser session; caller-supplied owner/restaurant/price values do not choose state or pricing. Add/increase validate public item/category/restaurant availability on the server. Logout clears only this browser's basket. Basket mutation forms require antiforgery. Checkout will separately require Customer access; no checkout exists yet.
+
+TASK-021: /checkout requires CustomerAccess (authenticated Customer); Manager/Admin-only accounts are denied. Application also validates authenticated GUID identity and Customer claims. Contact prefill comes only from the signed-in profile. Review does not accept an owner/total as authority and creates no order or payment.

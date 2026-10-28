@@ -1,0 +1,11 @@
+.checkout-page { max-width: 1000px; margin-inline: auto; overflow-wrap: anywhere; }
+.checkout-layout { display: grid; gap: var(--space-6); align-items: start; }
+.checkout-panel { padding: var(--space-6); border: 1px solid var(--neutral-200); border-radius: var(--radius-card); background: var(--neutral-0); }
+.checkout-panel h2 { margin-top: 0; }
+label { display: block; font-weight: 600; margin-top: var(--space-4); }
+.checkout-panel ::deep input, .checkout-panel ::deep textarea, .checkout-panel ::deep select { width: 100%; padding: var(--space-3); margin-block: var(--space-2); border: 1px solid var(--neutral-500); border-radius: var(--radius-control); font: inherit; }
+button { width: 100%; padding: var(--space-3); margin-top: var(--space-6); background: var(--brand-700); color: var(--neutral-0); border: 0; border-radius: var(--radius-control); cursor: pointer; }
+button:disabled { background: var(--neutral-100); color: var(--neutral-700); cursor: not-allowed; }
+.checkout-line { padding-block: var(--space-4); border-bottom: 1px solid var(--neutral-200); }
+.checkout-line h3 { font-size: 16px; line-height: 24px; }
+@media (min-width: 900px) { .checkout-layout { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }

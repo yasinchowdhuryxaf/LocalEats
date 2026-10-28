@@ -1,4 +1,5 @@
 using LocalEats.Application.Basket;
+using LocalEats.Application.Checkout;
 using LocalEats.Application.Restaurants;
 using LocalEats.Application.Users;
 using LocalEats.Application.Users.Profile;
@@ -32,6 +33,7 @@ builder.Services.AddSession(options =>
 });
 builder.Services.AddScoped<IBasketStateStore, SessionBasketStore>();
 builder.Services.AddScoped<BasketService>();
+builder.Services.AddScoped<CheckoutService>();
 if (!builder.Environment.IsDevelopment())
 {
     builder.Services.ConfigureApplicationCookie(options =>

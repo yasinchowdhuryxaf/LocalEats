@@ -150,7 +150,7 @@ Never commit real credentials. Use environment variables or local user secrets f
 See `docs/TASKS.md` for the ordered implementation plan. The next task is:
 
 ```text
-TASK-021 - Build checkout page
+TASK-022 - Create order transaction
 ```
 
 
@@ -239,4 +239,8 @@ Open a restaurant menu to see the basket preview and header count. Available ite
 
 ## Basket page (TASK-020)
 
-Open http://127.0.0.1:5015/basket or use the header basket link. Filled baskets show item quantities, prices, line totals, display subtotal and update/remove/clear controls; empty baskets link to restaurants. Checkout is a disabled upcoming action until TASK-021. Restaurant statuses remain unchanged.
+Open http://127.0.0.1:5015/basket or use the header basket link. Filled baskets show item quantities, prices, line totals, display subtotal and update/remove/clear controls; empty baskets link to restaurants. Continue to checkout opens the Customer-only review page. Order creation is not available yet. Restaurant statuses remain unchanged.
+
+## Checkout review (TASK-021)
+
+Open /checkout and sign in as a Customer. Review contact details, Cash on Delivery (address required) or Pay at Pickup, notes and current server-checked item prices. The Review checkout action validates only: no order/payment is created and the basket is retained. Empty/unavailable baskets block review. A small browser submit-state script handles pending feedback; application rules remain C#. Transactional orders are TASK-022.

@@ -1,0 +1,122 @@
+@page "/checkout"
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Security
+@using LocalEats.Application.Checkout
+@using LocalEats.Application.Basket
+@using LocalEats.Application.Users.Profile
+@attribute [Authorize(Policy = RolePolicies.Customer)]
+@inject CheckoutService Checkout
+@inject BasketService Basket
+@inject ProfileService Profiles
+@inject ILogger<CheckoutPage> Logger
+
+<PageTitle>Review checkout | LocalEats</PageTitle>
+<section class="checkout-page" aria-labelledby="checkout-heading">
+    <a href="/basket">← Back to basket</a>
+    <h1 id="checkout-heading">Review checkout</h1>
+    <p>Check your details and current item prices. Order submission is coming next; no order or payment is created here.</p>
+    @if (failed)
+    {
+        <p role="alert">We couldn’t load checkout. Please try again or sign in again.</p><a href="/checkout">Reload checkout</a>
+    }
+    else if (summary is not null)
+    {
+        @if (summary.Errors.Count > 0)
+        {
+            <div role="alert">@foreach (var error in summary.Errors) { <p>@error</p> }<a href="/basket">Review basket</a></div>
+        }
+        @if (review is not null)
+        {
+            @if (review.Errors.Count == 0) { <p role="status">Your details are valid. Order submission is not available yet; nothing has been placed or paid.</p> }
+            else { <div role="alert">@foreach (var error in review.Errors) { <p>@error</p> }</div> }
+        }
+        <div class="checkout-layout">
+            <section class="checkout-panel" aria-labelledby="details-heading">
+                <h2 id="details-heading">Your details</h2>
+                <EditForm id="checkout-form" Model="Input" OnValidSubmit="ReviewAsync" FormName="checkout-review" Enhance="false">
+                    <DataAnnotationsValidator /><div role="alert"><ValidationSummary /></div>
+                    <label for="checkout-name">Name</label>
+                    <InputText id="checkout-name" @bind-Value="Input.Name" maxlength="100" autocomplete="name" required />
+                    <ValidationMessage For="() => Input.Name" />
+                    <label for="checkout-phone">Phone number</label>
+                    <InputText id="checkout-phone" type="tel" @bind-Value="Input.Phone" maxlength="32" autocomplete="tel" required />
+                    <ValidationMessage For="() => Input.Phone" />
+                    <p>Include your country code if needed. This number is not verified.</p>
+                    <label for="checkout-method">Payment and collection method</label>
+                    <InputSelect id="checkout-method" @bind-Value="Input.PaymentMethod">
+                        <option value="CashOnDelivery">Cash on Delivery</option><option value="PayAtPickup">Pay at Pickup</option>
+                    </InputSelect>
+                    <ValidationMessage For="() => Input.PaymentMethod" />
+                    <label for="checkout-address">Address (required for delivery)</label>
+                    <InputTextArea id="checkout-address" @bind-Value="Input.Address" maxlength="500" autocomplete="street-address" rows="3" />
+                    <ValidationMessage For="() => Input.Address" />
+                    <label for="checkout-notes">Order notes (optional)</label>
+                    <InputTextArea id="checkout-notes" @bind-Value="Input.Notes" maxlength="500" rows="3" />
+                    <ValidationMessage For="() => Input.Notes" />
+                    <button type="submit" disabled="@(!summary.CanReview || processing)" data-can-review="@(summary.CanReview ? "true" : "false")">@(processing ? "Reviewing…" : "Review checkout")</button>
+                </EditForm>
+            </section>
+            <aside class="checkout-panel" aria-labelledby="summary-heading">
+                <h2 id="summary-heading">Current item summary</h2>
+                <p>@summary.RestaurantName</p>
+                @foreach (var line in summary.Lines)
+                {
+                    <div class="checkout-line"><h3>@line.Name</h3><p>@line.Quantity × BDT @Money(line.UnitPriceMinor) · BDT @Money(line.TotalMinor)</p></div>
+                }
+                <p><strong>Current item subtotal: BDT @Money(summary.SubtotalMinor)</strong></p>
+                <p>Prices and availability were checked on the server. Delivery fees are not configured or included. This is not an order confirmation.</p>
+            </aside>
+        </div>
+    }
+</section>
+
+@code {
+    [SupplyParameterFromForm] public CheckoutInput Input { get; set; }
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    private CheckoutSummary? summary;
+    private CheckoutReview? review;
+    private bool failed;
+    private bool processing;
+    public CheckoutPage() => Input = new();
+    private static string Money(long minor) => (minor / 100m).ToString("N2", CultureInfo.InvariantCulture);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Input ??= new();
+        try
+        {
+            if (HttpContext is null) { failed = true; return; }
+            var profile = await Profiles.GetAsync(HttpContext.User);
+            if (profile is null) { failed = true; return; }
+            if (HttpMethods.IsGet(HttpContext.Request.Method))
+            {
+                Input.Name = profile.DisplayName;
+                Input.Phone = profile.PhoneNumber ?? string.Empty;
+            }
+            summary = await Checkout.SummaryAsync(HttpContext.User, Basket.Snapshot(), HttpContext.RequestAborted);
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Checkout load failed with error type {ErrorType}.", exception.GetType().Name);
+            failed = true;
+        }
+    }
+
+    private async Task ReviewAsync()
+    {
+        if (HttpContext is null) return;
+        processing = true;
+        try
+        {
+            review = await Checkout.ReviewAsync(HttpContext.User, Basket.Snapshot(), Input, HttpContext.RequestAborted);
+            summary = review.Summary;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Checkout review failed with error type {ErrorType}.", exception.GetType().Name);
+            failed = true;
+        }
+        finally { processing = false; }
+    }
+}

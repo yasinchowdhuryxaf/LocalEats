@@ -316,12 +316,12 @@ Goal: allow a customer to create a valid order from one restaurant.
 
 ## TASK-021: Build checkout page
 
-- [ ] Create `/checkout`.
-- [ ] Add customer name, phone, address, and notes.
-- [ ] Add `CashOnDelivery` and `PayAtPickup` options.
-- [ ] Validate all fields.
-- [ ] Show final order summary.
-- [ ] Disable submission while processing.
+- [x] Create `/checkout`.
+- [x] Add customer name, phone, address, and notes.
+- [x] Add `CashOnDelivery` and `PayAtPickup` options.
+- [x] Validate all fields.
+- [x] Show final order summary.
+- [x] Disable submission while processing.
 
 ## TASK-022: Create order transaction
 
@@ -707,11 +707,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 5 - Basket and Order Creation
-- Current task: TASK-021
-- Branch: `codex/task-020-basket-page`
+- Current task: TASK-022
+- Branch: `codex/task-021-checkout-page`
 - Status: [ ] Not started
-- Last completed task: TASK-020 - Build basket page
-- Next task: TASK-021 - Build checkout page
+- Last completed task: TASK-021 - Build checkout page
+- Next task: TASK-022 - Create order transaction
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

@@ -755,3 +755,5 @@ TASK-018: restaurant details/menu use Web static SSR → RestaurantMenuService �
 TASK-019: static SSR basket POST → Application BasketService/locked BasketState → Infrastructure canonical product reader. Web SessionBasketStore binds temporary in-process cache state to the protected browser session ID. No database basket or interactive global render mode is added. See docs/decisions/0003-browser-session-basket.md for lifetime, limits and future shared-store requirements.
 
 TASK-020: /basket is a static SSR view over the existing session BasketService. Page handlers map transport action values to the same Application operations; no new persistence, API or checkout use case is introduced.
+
+TASK-021: checkout SSR → Application CheckoutService → batched canonical ICheckoutCatalogReader query (maximum 50 IDs). Review validates without persistence; transactional commit remains TASK-022. Entity filtering precedes DTO projection for EF translation. A small standalone submit-state browser enhancer controls pending feedback only; business logic stays in C#.

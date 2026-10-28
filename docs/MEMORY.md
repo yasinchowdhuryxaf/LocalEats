@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-020 dedicated basket page complete. TASK-021 checkout page is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-021 checkout review page complete. TASK-022 transactional order creation is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-021 - Build checkout page (not started)**
+**TASK-022 - Create order transaction (not started)**
 
 ### Current task objective
 
-Build the checkout page in TASK-021; transactional order creation remains TASK-022. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Implement transactional order creation in TASK-022 with fresh server pricing/availability checks and server-derived customer identity. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-020 complete. TASK-021 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-021 complete. TASK-022 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-021 - Build checkout page.
-2. TASK-022 - Create order transaction.
+1. TASK-022 - Create order transaction.
+2. TASK-023 - Build customer order history.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-021: Build checkout page.
-Implement only checkout-page scope; do not implement transactional orders or manager tools.
+We are starting TASK-022: Create order transaction.
+Implement only transactional order scope; do not implement manager tools or online payment integration.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -516,3 +516,13 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Demonstrated menu → View full basket at localhost. Empty page fits at 375/1440 without horizontal overflow. Filled flows verified only with isolated fixtures, preserving the user's explicit closed-sample choice. No existing restaurant or user data changed. Browser tab remains a visible deliverable at http://127.0.0.1:5015/basket ; screenshot outputs/basket-page.png is ignored generated proof.
 - Changed BasketPage.razor/CSS, header/menu links, HTTP tests and documentation. No new dependency, schema, migration or ARAM PROJECT access/change. Hosted CI and MY_PROJECT sync/hash verification follow. Next TASK-021.
 - TASK-020 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40769345961 . Feature commit ea42d88 is published on main. Desktop MY_PROJECT refreshed; all 172 portable files matched SHA-256 hashes. Final memory copied after this entry. Live /basket remains a visible deliverable; existing restaurant statuses are unchanged. Existing CI runtime notices remain non-blocking maintenance.
+
+### 2026-10-29 - TASK-021 checkout review page
+
+- Added CustomerAccess-protected /checkout with own-profile name/phone prefill, contact/address/notes fields, CashOnDelivery/PayAtPickup choices, server/field validation, current catalog item summary and a Review checkout action. CashOnDelivery requires an address; pickup permits an empty address. Proposed limits: name 100, phone 32 with standard country-agnostic syntax, address/notes 500. Phone remains unverified; no delivery-area eligibility or delivery fee is invented.
+- Application CheckoutService checks authenticated Customer/GUID claims, valid bounded basket quantities, current public/open restaurant/category/item eligibility, same canonical restaurant and overflow-safe prices. Batched Infrastructure lookup filters entity IDs BEFORE DTO projection. Initial regression tests caught a projection/filter translation issue; corrected it and reran the full suite successfully.
+- Review re-reads canonical prices and ignores posted totals/owner fields. Review is READ ONLY: no order/payment/profile/draft persistence and no basket clearing. Address/phone/notes are not saved in session. Final transactional creation remains TASK-022 and must repeat checks at commit time. The subtotal excludes unconfigured delivery fees.
+- Basket Continue to checkout now links to /checkout. Static SSR forms keep cookie/auth behavior intact. Added a self-contained checkout-state.js submit/pageshow enhancer for immediate pending-button disable/reset; all validation and business logic remain C#. No JavaScript framework or package was introduced. Node syntax check passed; actual pending-button visual QA is not yet performed.
+- Added 7 Application and 8 HTTP cases (including role/anonymous-after-logout coverage) for both methods, delivery address, invalid fields/methods, canonical price changes, unavailable products, antiforgery, ignored overposting and unchanged order counts/basket. Final formatting/build passed with zero warnings/errors; all 177 tests passed (8 Domain, 53 Application, 116 HTTP/database), zero failures/skips. Both health checks returned 200.
+- Browser /checkout correctly challenged to /login?ReturnUrl=%2Fcheckout. Left this page as a deliverable for the user to sign in. Authenticated form/layout/submit visuals were not manually checked; real HTTP fixtures verified form content and submissions. No account/role or closed restaurant status was changed to bypass the sign-in/basket requirements. Screenshot outputs/checkout-access.png is ignored generated proof of the access gate only.
+- Added checkout DTOs/service/reader contract, batched reader implementation, CheckoutPage/CSS and pending-state script; updated basket CTA, tests and docs. No schema/migration or dependency change. No ARAM PROJECT resource accessed/modified. Hosted CI and MY_PROJECT sync/hash verification follow. Next TASK-022.

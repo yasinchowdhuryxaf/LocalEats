@@ -10,6 +10,7 @@ public sealed class LocalEatsDbContext(DbContextOptions<LocalEatsDbContext> opti
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<Restaurant> Restaurants => Set<Restaurant>();
+    public DbSet<ManagerRestaurant> ManagerRestaurants => Set<ManagerRestaurant>();
 
     public DbSet<MenuCategory> MenuCategories => Set<MenuCategory>();
 

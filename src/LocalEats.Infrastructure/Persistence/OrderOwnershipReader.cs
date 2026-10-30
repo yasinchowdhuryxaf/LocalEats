@@ -12,7 +12,7 @@ public sealed class OrderOwnershipReader(IServiceScopeFactory scopes) : IOrderOw
         var database = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
         return await database.Orders.AsNoTracking()
             .Where(order => order.Id == orderId)
-            .Select(order => new OrderOwnership(order.Id, order.CustomerId))
+            .Select(order => new OrderOwnership(order.Id, order.CustomerId, order.RestaurantId))
             .SingleOrDefaultAsync(cancellationToken);
     }
 }

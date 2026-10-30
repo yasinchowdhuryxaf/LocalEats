@@ -63,6 +63,7 @@ public static class DependencyInjection
             options.AddPolicy(RolePolicies.Admin, policy => policy.RequireAuthenticatedUser().RequireRole(RoleNames.Admin));
         });
         services.AddScoped<IOrderOwnershipReader, OrderOwnershipReader>();
+        services.AddScoped<IManagerRestaurantReader, ManagerRestaurantReader>();
         services.AddScoped<IResourceAuthorizationService, ResourceAuthorizationService>();
         services.AddScoped<IRegistrationStore, IdentityRegistrationStore>();
         services.AddScoped<ISessionStore, IdentitySessionStore>();

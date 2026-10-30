@@ -29,6 +29,139 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Manager_AssignmentCascadesWhenItsUserOrRestaurantIsDeleted(bool deleteUser)
+    {
+        var id = await PlaceOrderFixtureAsync();
+        var managerId = await SetManagerRoleAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var restaurantId = await db.Orders.Where(order => order.Id == id).Select(order => order.RestaurantId).SingleAsync();
+        db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = managerId, RestaurantId = restaurantId, CreatedAt = DateTimeOffset.UtcNow });
+        await db.SaveChangesAsync();
+        if (deleteUser)
+        {
+            await db.Users.Where(user => user.Id == managerId).ExecuteDeleteAsync();
+            Assert.Null(await db.Orders.Where(order => order.Id == id).Select(order => order.CustomerId).SingleAsync());
+        }
+        else
+        {
+            await db.Orders.Where(order => order.Id == id).ExecuteDeleteAsync();
+            await db.Restaurants.Where(restaurant => restaurant.Id == restaurantId).ExecuteDeleteAsync();
+        }
+        Assert.False(await db.ManagerRestaurants.AnyAsync(assignment => assignment.ManagerId == managerId));
+    }
+
+    private async Task<Guid> SetManagerRoleAsync()
+    {
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = await users.FindByEmailAsync(email);
+        Assert.NotNull(user);
+        Assert.True((await users.RemoveFromRoleAsync(user, "Customer")).Succeeded);
+        Assert.True((await users.AddToRoleAsync(user, "Manager")).Succeeded);
+        return user.Id;
+    }
+
+    [Fact]
+    public async Task Manager_AssignmentScopesOrdersAndRevokesOnNextRead()
+    {
+        var own = await PlaceOrderFixtureAsync();
+        var other = await PlaceOrderFixtureAsync();
+        var managerId = await SetManagerRoleAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var restaurantId = await db.Orders.Where(order => order.Id == own).Select(order => order.RestaurantId).SingleAsync();
+        var otherRestaurantId = await db.Orders.Where(order => order.Id == other).Select(order => order.RestaurantId).SingleAsync();
+        db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = managerId, RestaurantId = restaurantId, CreatedAt = DateTimeOffset.UtcNow });
+        await db.SaveChangesAsync();
+        var user = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, managerId.ToString()), new Claim(ClaimTypes.Role, "Manager")], "test"));
+        var authorization = scope.ServiceProvider.GetRequiredService<IResourceAuthorizationService>();
+        Assert.True(await authorization.CanManageRestaurantAsync(user, restaurantId));
+        Assert.False(await authorization.CanManageRestaurantAsync(user, otherRestaurantId));
+        var reader = scope.ServiceProvider.GetRequiredService<IOrderDetailsReader>();
+        Assert.Null(await reader.GetAsync(other, managerId, false, false, true, 1, 20));
+        using var client = Client();
+        await Login(client, email, Password);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync($"/orders/{own}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/orders/{other}?restaurantId={restaurantId}")).StatusCode);
+        await db.ManagerRestaurants.Where(row => row.ManagerId == managerId).ExecuteDeleteAsync();
+        Assert.False(await authorization.CanManageRestaurantAsync(user, restaurantId));
+        Assert.Null(await reader.GetAsync(own, managerId, false, false, true, 1, 20));
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/orders/{own}")).StatusCode);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Manager_UnassignedOrSoftDeletedRestaurant_DeniesOrder(bool softDeleted)
+    {
+        var id = await PlaceOrderFixtureAsync();
+        var managerId = await SetManagerRoleAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var restaurantId = await db.Orders.Where(order => order.Id == id).Select(order => order.RestaurantId).SingleAsync();
+        if (softDeleted)
+        {
+            db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = managerId, RestaurantId = restaurantId, CreatedAt = DateTimeOffset.UtcNow });
+            await db.SaveChangesAsync();
+            await db.Restaurants.Where(row => row.Id == restaurantId).ExecuteUpdateAsync(update => update.SetProperty(row => row.DeletedAt, DateTimeOffset.UtcNow));
+        }
+        using var client = Client();
+        await Login(client, email, Password);
+        var response = await client.GetAsync($"/orders/{id}");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.DoesNotContain("Sample road", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Manager_AssignmentAlone_DoesNotGrantCustomerPrivilegedAccess()
+    {
+        var id = await PlaceOrderFixtureAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var order = await db.Orders.SingleAsync(row => row.Id == id);
+        Assert.NotNull(order.CustomerId);
+        var userId = order.CustomerId.Value;
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var other = new ApplicationUser { UserName = $"manager-test-{Guid.NewGuid():N}@example.test", Email = $"manager-test-{Guid.NewGuid():N}@example.test" };
+        Assert.True((await users.CreateAsync(other)).Succeeded);
+        extraUserId = other.Id;
+        order.CustomerId = other.Id;
+        db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = userId, RestaurantId = order.RestaurantId, CreatedAt = DateTimeOffset.UtcNow });
+        await db.SaveChangesAsync();
+        using var client = Client();
+        await Login(client, email, Password);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/orders/{id}")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Manager_AssignmentRejectsSecondRestaurantAndInvalidForeignKeys()
+    {
+        var id = await PlaceOrderFixtureAsync();
+        var otherId = await PlaceOrderFixtureAsync();
+        var managerId = await SetManagerRoleAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var restaurantId = await db.Orders.Where(order => order.Id == id).Select(order => order.RestaurantId).SingleAsync();
+        var otherRestaurantId = await db.Orders.Where(order => order.Id == otherId).Select(order => order.RestaurantId).SingleAsync();
+        db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = managerId, RestaurantId = restaurantId, CreatedAt = DateTimeOffset.UtcNow });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = managerId, RestaurantId = otherRestaurantId, CreatedAt = DateTimeOffset.UtcNow });
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+        db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = Guid.NewGuid(), RestaurantId = restaurantId, CreatedAt = DateTimeOffset.UtcNow });
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+        await db.ManagerRestaurants.Where(row => row.ManagerId == managerId).ExecuteDeleteAsync();
+        db.ManagerRestaurants.Add(new ManagerRestaurant { ManagerId = managerId, RestaurantId = Guid.NewGuid(), CreatedAt = DateTimeOffset.UtcNow });
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+    }
+
     [Fact]
     public async Task History_Empty_IsPrivateAndLinkedFromDashboard()
     {
@@ -267,7 +400,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
 
     private sealed class FailingOrderDetailsReader : IOrderDetailsReader
     {
-        public Task<OrderDetails?> GetAsync(Guid orderId, Guid customerId, bool isAdmin, int page, int pageSize, CancellationToken cancellationToken = default)
+        public Task<OrderDetails?> GetAsync(Guid orderId, Guid customerId, bool isAdmin, bool isCustomer, bool isManager, int page, int pageSize, CancellationToken cancellationToken = default)
             => throw new InvalidOperationException("Private provider detail");
     }
 

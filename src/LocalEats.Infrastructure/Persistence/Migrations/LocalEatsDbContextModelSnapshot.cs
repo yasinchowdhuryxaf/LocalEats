@@ -63,6 +63,24 @@ namespace LocalEats.Infrastructure.Persistence.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("LocalEats.Domain.Entities.ManagerRestaurant", b =>
+                {
+                    b.Property<Guid>("ManagerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RestaurantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ManagerId");
+
+                    b.HasIndex("RestaurantId");
+
+                    b.ToTable("ManagerRestaurants");
+                });
+
             modelBuilder.Entity("LocalEats.Domain.Entities.MenuCategory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -523,6 +541,23 @@ namespace LocalEats.Infrastructure.Persistence.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("LocalEats.Domain.Entities.ManagerRestaurant", b =>
+                {
+                    b.HasOne("LocalEats.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("ManagerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LocalEats.Domain.Entities.Restaurant", "Restaurant")
+                        .WithMany()
+                        .HasForeignKey("RestaurantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Restaurant");
                 });
 
             modelBuilder.Entity("LocalEats.Domain.Entities.MenuCategory", b =>

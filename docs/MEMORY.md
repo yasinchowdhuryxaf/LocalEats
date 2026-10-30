@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-024 customer order history complete. TASK-025 restaurant manager relationship is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-025 manager restaurant relationship complete. TASK-026 restaurant profile management is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-025 - Add restaurant manager relationship (not started)**
+**TASK-026 - Build restaurant profile management (not started)**
 
 ### Current task objective
 
-Implement the persisted manager/restaurant relationship and verified resource authorization in TASK-025. TASK-024 implements own-customer history with pagination and an empty state. TASK-023 implements /orders/{id} with the existing resource policy; Manager-only access waits for TASK-025. TASK-022 transactional creation now rechecks canonical prices/availability and saves immutable purchase snapshots. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Implement assigned-restaurant profile read/edit and server validation in TASK-026, reusing the persisted TASK-025 relationship and resource checks. TASK-024 implements own-customer history with pagination and an empty state. TASK-023 implements /orders/{id} with the existing resource policy; Manager order access now requires the persisted TASK-025 assignment. TASK-022 transactional creation now rechecks canonical prices/availability and saves immutable purchase snapshots. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-024 complete. TASK-025 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-025 complete. TASK-026 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-025 - Add restaurant manager relationship.
-2. TASK-026 - Build restaurant profile management.
+1. TASK-026 - Build restaurant profile management.
+2. TASK-027 - Build menu category management.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-025: Add restaurant manager relationship.
-Implement only the verified manager/restaurant relationship, migration and resource authorization tests; do not implement profile/menu CRUD or online payment integration.
+We are starting TASK-026: Build restaurant profile management.
+Implement only assigned-restaurant profile management and its validation/access tests; do not implement menu/order management, role grants or online payment integration.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -609,3 +609,42 @@ Changed files for TASK-024:
 
 
 - TASK-024 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/41119619994 . Feature commit eef0123 is published on main. Desktop MY_PROJECT refreshed; all 208 portable source files matched SHA-256 hashes. This final record is copied and hashes rechecked after the entry. Signed-in /orders empty-state preview remains a deliverable. Filled history visuals and TASK-045 browser E2E remain pending; next TASK-025. Existing action/runner notices remain non-blocking maintenance.
+
+### 2026-10-31 - TASK-025 manager restaurant relationship
+
+- Added Domain ManagerRestaurant and Infrastructure mapping/reader. ManagerId primary key enforces at most one restaurant per manager; multiple managers may share a restaurant. User/restaurant foreign keys cascade assignment cleanup and CreatedAt records the UTC assignment time. No assignment data or privileged user was seeded. See ADR 0005 for these light-MVP design choices.
+- Application CanManageRestaurantAsync requires authenticated Manager/GUID claims plus the matching persisted assignment. Order ownership now includes RestaurantId; order reads allow explicit Admin, own Customer, or assigned Manager. Manager-only former customer ownership cannot bypass assignment. Assignment rows without Manager role cannot grant foreign-order access. Existing customer history policy remains Customer-only.
+- Order-detail header/items SQL repeats explicit Customer/Admin/assigned-Manager checks, excludes soft-deleted restaurants for Manager access and re-reads assignment rows without a positive cache. Revocation takes effect on the next read without a new cookie. Closed/inactive/unapproved restaurants may still expose historical records to their assigned Manager; public ordering rules are separate. Cookie role revocation remains TASK-034; no claim of immediate role invalidation is made.
+- Reviewed and applied 20261030201522_AddManagerRestaurantRelationship only to explicit 127.0.0.1:15432/localeats. It creates an empty table, keys and index without backfilling users. Read-only verification confirmed zero assignments, zero development orders and both existing sample restaurants still closed. No ARAM PROJECT resource accessed or changed.
+- Added 9 Application and 7 PostgreSQL/HTTP cases for role/claims guards, assigned restaurant reads, cross-restaurant/overposted-restaurant denial, revocation through the same login cookie, SQL scope even when called directly, soft deletion, row-without-role denial, one-restaurant uniqueness, invalid foreign keys, and cascade cleanup while preserving customer order retention. All 233 tests passed (8 Domain, 73 Application, 152 HTTP/database), zero failures/skips. E2E project remains pending TASK-045.
+- Final format verification and full Release build passed with zero warnings/errors. Both LocalEats localhost health checks returned 200. Existing signed-in /orders empty-history preview remains available as a deliverable. This is a backend/authorization foundation; no new manager screen, provisioning API or real role/assignment grant was introduced to fabricate visible progress.
+- Updated internal permission/ownership/detail-read contracts, DI, persistence/migration, tests, permission/security/architecture docs and ADR. Next TASK-026 manager profile UI. Hosted CI and MY_PROJECT source/hash verification follow.
+
+Changed files for TASK-025:
+- README.md
+- docs/ARCHITECTURE.md
+- docs/MEMORY.md
+- docs/PERMISSIONS.md
+- docs/SECURITY.md
+- docs/TASKS.md
+- docs/TEST_PLAN.md
+- docs/decisions/0005-manager-restaurant-assignments.md
+- src/LocalEats.Application/Orders/IOrderDetailsReader.cs
+- src/LocalEats.Application/Orders/OrderDetailsService.cs
+- src/LocalEats.Application/Security/IManagerRestaurantReader.cs
+- src/LocalEats.Application/Security/IResourceAuthorizationService.cs
+- src/LocalEats.Application/Security/OrderOwnership.cs
+- src/LocalEats.Application/Security/ResourceAuthorizationService.cs
+- src/LocalEats.Domain/Entities/ManagerRestaurant.cs
+- src/LocalEats.Infrastructure/DependencyInjection.cs
+- src/LocalEats.Infrastructure/Persistence/Configurations/ManagerRestaurantConfiguration.cs
+- src/LocalEats.Infrastructure/Persistence/LocalEatsDbContext.cs
+- src/LocalEats.Infrastructure/Persistence/ManagerRestaurantReader.cs
+- src/LocalEats.Infrastructure/Persistence/Migrations/20261030201522_AddManagerRestaurantRelationship.Designer.cs
+- src/LocalEats.Infrastructure/Persistence/Migrations/20261030201522_AddManagerRestaurantRelationship.cs
+- src/LocalEats.Infrastructure/Persistence/Migrations/LocalEatsDbContextModelSnapshot.cs
+- src/LocalEats.Infrastructure/Persistence/OrderDetailsReader.cs
+- src/LocalEats.Infrastructure/Persistence/OrderOwnershipReader.cs
+- tests/LocalEats.Api.Tests/SessionHttpTests.cs
+- tests/LocalEats.Application.Tests/ResourceAuthorizationServiceTests.cs
+

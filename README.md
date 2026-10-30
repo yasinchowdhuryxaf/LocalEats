@@ -253,3 +253,6 @@ After placing a cash order, choose View order details on the receipt. /orders/{i
 ## Customer order history (TASK-024)
 
 Sign in as a Customer and choose Your orders in the header or View order history on the dashboard. /orders lists only your placed orders, newest first, 10 per page, with UTC date, restaurant, status, persisted total and a View order details link. Empty history links to restaurants; loading failures offer a safe retry. Existing closed sample restaurants are unchanged.
+## Manager relationship (TASK-025)
+
+The database now supports one restaurant assignment per Manager. The Manager role alone cannot read unrelated orders; both the role and saved assignment are required. Assigned Managers can read existing /orders/{id} details, and removing the assignment revokes the next read. This foundation does not assign any real account or expose onboarding/menu/order-management screens. Trusted provisioning and subsequent manager tasks remain separate.

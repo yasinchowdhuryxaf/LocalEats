@@ -1,3 +1,3 @@
 namespace LocalEats.Application.Security;
 
-public sealed record OrderOwnership(Guid Id, Guid? CustomerId);
+public sealed record OrderOwnership(Guid Id, Guid? CustomerId, Guid RestaurantId);

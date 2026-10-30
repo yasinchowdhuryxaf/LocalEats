@@ -11,10 +11,11 @@ public sealed class OrderDetailsService(IResourceAuthorizationService authorizat
     {
         if (!Guid.TryParse(id, out var orderId) || orderId == Guid.Empty
             || user.Identity?.IsAuthenticated != true
-            || !Guid.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var customerId)
-            || customerId == Guid.Empty
+            || !Guid.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId)
+            || userId == Guid.Empty
             || !await authorization.CanReadOrderAsync(user, orderId, cancellationToken)) return null;
 
-        return await reader.GetAsync(orderId, customerId, user.IsInRole(RoleNames.Admin), Math.Max(1, page), PageSize, cancellationToken);
+        return await reader.GetAsync(orderId, userId, user.IsInRole(RoleNames.Admin), user.IsInRole(RoleNames.Customer),
+            user.IsInRole(RoleNames.Manager), Math.Max(1, page), PageSize, cancellationToken);
     }
 }

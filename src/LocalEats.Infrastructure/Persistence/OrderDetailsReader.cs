@@ -5,10 +5,13 @@ namespace LocalEats.Infrastructure.Persistence;
 
 public sealed class OrderDetailsReader(LocalEatsDbContext db) : IOrderDetailsReader
 {
-    public async Task<OrderDetails?> GetAsync(Guid orderId, Guid customerId, bool isAdmin, int page, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<OrderDetails?> GetAsync(Guid orderId, Guid userId, bool isAdmin, bool isCustomer, bool isManager, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         // Repeat ownership in SQL so full details are never fetched for another customer.
-        var allowed = db.Orders.AsNoTracking().Where(order => order.Id == orderId && (isAdmin || order.CustomerId == customerId));
+        var allowed = db.Orders.AsNoTracking().Where(order => order.Id == orderId
+            && (isAdmin || (isCustomer && order.CustomerId == userId)
+                || (isManager && db.ManagerRestaurants.Any(assignment => assignment.ManagerId == userId
+                    && assignment.RestaurantId == order.RestaurantId && assignment.Restaurant.DeletedAt == null))));
         var header = await allowed.Select(order => new OrderDetails(order.Id, order.OrderNumber, order.Restaurant.Name,
             order.Status.ToString(), order.Currency, order.TotalMinor, order.CreatedAt, order.ContactName, order.ContactPhone,
             order.DeliveryAddress, order.Notes, order.PaymentMethod, new List<OrderDetailLine>(), 1, 1)).SingleOrDefaultAsync(cancellationToken);

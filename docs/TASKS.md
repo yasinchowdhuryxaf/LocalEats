@@ -366,10 +366,10 @@ Goal: allow a manager to operate one restaurant.
 
 ## TASK-025: Add restaurant manager relationship
 
-- [ ] Add ManagerRestaurant relationship.
-- [ ] Add ownership/resource authorization checks.
-- [ ] Add migration.
-- [ ] Add tests for manager access and cross-restaurant denial.
+- [x] Add ManagerRestaurant relationship.
+- [x] Add ownership/resource authorization checks.
+- [x] Add migration.
+- [x] Add tests for manager access and cross-restaurant denial.
 
 ## TASK-026: Build restaurant profile management
 
@@ -709,11 +709,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 6 - Restaurant Manager and Menu Management
-- Current task: TASK-025
-- Branch: `codex/task-024-order-history`
+- Current task: TASK-026
+- Branch: `codex/task-025-manager-relationship`
 - Status: [ ] Not started
-- Last completed task: TASK-024 - Build customer order history
-- Next task: TASK-025 - Add restaurant manager relationship
-- Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
+- Last completed task: TASK-025 - Add restaurant manager relationship
+- Next task: TASK-026 - Build restaurant profile management
+- Known issues: E2E automation remains TASK-045; manager profile/menu/order screens remain TASK-026 onward; trusted role/assignment provisioning is not exposed.
 
 Update this section after every completed task.

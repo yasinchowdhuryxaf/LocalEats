@@ -1,0 +1,89 @@
+@page "/orders/{Id}"
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Orders
+@attribute [Authorize]
+@inject OrderDetailsService Orders
+@inject ILogger<OrderConfirmation> Logger
+
+<PageTitle>Order details | LocalEats</PageTitle>
+<section class="order-page" aria-labelledby="order-heading">
+    <a href="/restaurants">Browse restaurants</a>
+    @if (failed)
+    {
+        <h1 id="order-heading">Order unavailable</h1><p role="alert">We couldn’t load the order. Please try again.</p>
+        <a href="@OrderUrl(Page)">Try again</a>
+    }
+    else if (order is null)
+    {
+        <h1 id="order-heading">Order not found</h1><p>This order is not available.</p>
+    }
+    else
+    {
+        <h1 id="order-heading">Order details</h1>
+        <p class="order-number">@order.Number</p>
+        <p><strong>Status: @order.Status</strong></p>
+        <p>@order.RestaurantName · Ordered @order.CreatedAt.ToString("dd MMM yyyy HH:mm", CultureInfo.InvariantCulture) UTC</p>
+        <div class="order-layout">
+            <section class="order-panel" aria-labelledby="items-heading">
+                <h2 id="items-heading">Purchased items</h2>
+                @if (order.Items.Count == 0) { <p>No saved item details are available for this older order.</p> }
+                @foreach (var item in order.Items)
+                {
+                    <article class="order-line"><h3>@item.Name</h3><p>@item.Quantity × @order.Currency @Money(item.UnitPriceMinor)</p><p>Line total: @order.Currency @Money(item.TotalMinor)</p></article>
+                }
+                @if (order.TotalPages > 1)
+                {
+                    <nav aria-label="Order item pages">
+                        @if (order.Page > 1) { <a href="@OrderUrl(order.Page - 1)">Previous items</a> }
+                        <span>Page @order.Page of @order.TotalPages</span>
+                        @if (order.Page < order.TotalPages) { <a href="@OrderUrl(order.Page + 1)">Next items</a> }
+                    </nav>
+                }
+                <p><strong>Order total: @order.Currency @Money(order.TotalMinor)</strong></p>
+                <p>Purchased names and prices are saved with your order.</p>
+            </section>
+            <section class="order-panel" aria-labelledby="contact-heading">
+                <h2 id="contact-heading">Order information</h2>
+                <dl>
+                    <dt>Payment method</dt><dd>@Method(order.PaymentMethod)</dd>
+                    <dt>Contact name</dt><dd>@(order.ContactName ?? "Not recorded")</dd>
+                    <dt>Phone</dt><dd>@(order.ContactPhone ?? "Not recorded")</dd>
+                    <dt>Delivery address</dt><dd>@(string.IsNullOrWhiteSpace(order.Address) ? (order.PaymentMethod == "PayAtPickup" ? "Pickup — no delivery address" : "Not recorded") : order.Address)</dd>
+                    <dt>Notes</dt><dd>@(string.IsNullOrWhiteSpace(order.Notes) ? "No notes" : order.Notes)</dd>
+                </dl>
+                <p>Cash methods are recorded only. No online payment was collected.</p>
+            </section>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter] public string Id { get; set; } = string.Empty;
+    [SupplyParameterFromQuery(Name = "page")] public string? PageQuery { get; set; }
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    private int Page => int.TryParse(PageQuery, out var value) ? Math.Max(1, value) : 1;
+    private OrderDetails? order;
+    private bool failed;
+    private static string Money(long minor) => (minor / 100m).ToString("N2", CultureInfo.InvariantCulture);
+    private static string Method(string? value) => value switch { "CashOnDelivery" => "Cash on Delivery", "PayAtPickup" => "Pay at Pickup", _ => "Not recorded" };
+    private string OrderUrl(int page) => $"/orders/{Uri.EscapeDataString(Id)}?page={page}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        order = null;
+        failed = false;
+        try
+        {
+            if (HttpContext is null) return;
+            order = await Orders.GetAsync(HttpContext.User, Id, Page, HttpContext.RequestAborted);
+            if (order is null && !HttpContext.Response.HasStarted) HttpContext.Response.StatusCode = 404;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Order details load failed with error type {ErrorType}.", exception.GetType().Name);
+            failed = true;
+            if (HttpContext?.Response.HasStarted == false) HttpContext.Response.StatusCode = 503;
+        }
+    }
+}

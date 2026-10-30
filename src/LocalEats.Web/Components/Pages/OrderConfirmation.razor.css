@@ -1,0 +1,11 @@
+.order-page { max-width: 1000px; margin-inline: auto; overflow-wrap: anywhere; }
+.order-layout { display: grid; gap: var(--space-6); align-items: start; }
+.order-panel { background: var(--neutral-0); border: 1px solid var(--neutral-200); border-radius: var(--radius-card); padding: var(--space-6); }
+.order-panel h2 { margin-top: 0; }
+.order-number { font-weight: 600; }
+.order-line { border-bottom: 1px solid var(--neutral-200); padding-block: var(--space-3); }
+.order-line h3 { margin-block: var(--space-2); }
+dt { font-weight: 600; margin-top: var(--space-4); }
+dd { margin: var(--space-2) 0; white-space: pre-wrap; }
+nav { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-block: var(--space-4); }
+@media (min-width: 768px) { .order-layout { grid-template-columns: 1.2fr 1fr; } }

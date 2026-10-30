@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-022 transactional order creation complete. TASK-023 order confirmation is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-023 order confirmation complete. TASK-024 customer order history is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -112,20 +112,20 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current task
 
-**TASK-023 - Build order confirmation (not started)**
+**TASK-024 - Build customer order history (not started)**
 
 ### Current task objective
 
-Implement the full /orders/{id} confirmation page in TASK-023 with owner/manager/admin resource authorization. TASK-022 transactional creation now rechecks canonical prices/availability and saves immutable purchase snapshots. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Implement /orders customer history in TASK-024 with own-user scoping, pagination and an empty state. TASK-023 implements /orders/{id} with the existing resource policy; Manager-only access waits for TASK-025. TASK-022 transactional creation now rechecks canonical prices/availability and saves immutable purchase snapshots. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-022 complete. TASK-023 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-023 complete. TASK-024 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-023 - Build order confirmation.
-2. TASK-024 - Build customer order history.
+1. TASK-024 - Build customer order history.
+2. TASK-025 - Add restaurant manager relationship.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-023: Build order confirmation.
-Implement only the full order confirmation page and resource access tests; do not implement customer history, manager tools or online payment integration.
+We are starting TASK-024: Build customer order history.
+Implement only paginated own-customer order history and links to existing order details; do not implement manager tools or online payment integration.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -539,3 +539,35 @@ Verify Docker, migration history, development seeding, health endpoints, formatt
 - Final format verification and checkout-state.js syntax check passed; Release build passed with zero warnings/errors. Both Web/API health endpoints returned 200. Browser refreshed at the unchanged Customer sign-in gate for /checkout; no real account or restaurant was changed to bypass it. Authenticated form/pending-button visual QA remains outstanding; behavior was verified through isolated HTTP/database fixtures.
 - Changed order entity/configuration/migration, checkout summary/placement services, Infrastructure store/DI, Web checkout/DI/script, tests and supporting documentation. No new dependency or ARAM PROJECT access/change. Hosted CI and MY_PROJECT sync/hash verification follow; next TASK-023.
 - TASK-022 closure verified 2026-10-31: feature commit 8ef501b is published on main; hosted CI passed at https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/40776220394 . The prior final-record command was not executed because automatic approval review hit a usage limit. LocalEats container is running only on 127.0.0.1:15432. Portable copy is refreshed and all tracked source hashes verified after this record. No ARAM PROJECT resource accessed.
+
+### 2026-10-31 - TASK-023 order confirmation
+
+- Added authenticated /orders/{id} with persisted order number, current restaurant name/status, UTC created time, purchased name/price/quantity/line snapshots, full persisted total, contact/phone/address/notes and cash method. Pickup and legacy missing data use explicit fallbacks. Receipt now links to View order details. Lists use bounded 20-item pages with stable ordering and safe/clamped page input.
+- Application OrderDetailsService calls central resource authorization. Infrastructure projects only the requested order and repeats own-customer/admin scoping in both header and item queries. Foreign/missing/malformed orders return safe 404 without private details; read failures show a safe retry with 503. Page is static SSR, no-store and uses Razor encoding. No new API, migration, dependency, role grant or schema change.
+- Existing policy is preserved: Customer sees own orders, explicit Admin sees existing orders, Manager-only is denied until TASK-025 supplies verified restaurant assignments. No restaurant assignment is invented to satisfy a role label.
+- Added 11 PostgreSQL/HTTP cases covering delivery/pickup snapshots after catalog edits, customer/Admin/Manager access, anonymous challenge, missing/invalid IDs, privacy, bounded/clamped pagination, legacy null/empty data and safe injected failure. Corrected display assertions to decode HTML entities rather than require a literal unencoded plus sign. All 202 tests passed: 8 Domain, 59 Application, 135 HTTP/database; zero failures/skips. E2E project remains empty for TASK-045.
+- Final format verification passed after normalizing the new DTO file line endings. Final Release build passed with zero warnings/errors. Both LocalEats Web/API health checks returned 200. Docker target remains only localeats-postgres on 127.0.0.1:15432; read-only check confirmed both samples closed and zero development orders. No ARAM PROJECT resource accessed/modified.
+- Browser verified an order-route anonymous challenge, then left a visible deliverable at the checkout sign-in gate. Screenshot outputs/order-confirmation-access.png proves only the sign-in boundary. Filled order-page/responsive visual QA remains outstanding because this browser is anonymous and no development orders exist; successful authorized content was verified through isolated HTTP fixtures. Existing user/restaurant state was preserved.
+- No history or manager feature was implemented ahead of sequence. Next TASK-024 customer order history. Hosted CI and MY_PROJECT source/hash sync follow.
+
+Changed files for TASK-023:
+- README.md
+- docs/ARCHITECTURE.md
+- docs/MEMORY.md
+- docs/PERMISSIONS.md
+- docs/SECURITY.md
+- docs/TASKS.md
+- docs/TEST_PLAN.md
+- src/LocalEats.Application/Orders/IOrderDetailsReader.cs
+- src/LocalEats.Application/Orders/OrderDetailLine.cs
+- src/LocalEats.Application/Orders/OrderDetails.cs
+- src/LocalEats.Application/Orders/OrderDetailsService.cs
+- src/LocalEats.Infrastructure/DependencyInjection.cs
+- src/LocalEats.Infrastructure/Persistence/OrderDetailsReader.cs
+- src/LocalEats.Web/Components/Pages/CheckoutPage.razor
+- src/LocalEats.Web/Components/Pages/NotFound.razor
+- src/LocalEats.Web/Components/Pages/OrderConfirmation.razor
+- src/LocalEats.Web/Components/Pages/OrderConfirmation.razor.css
+- src/LocalEats.Web/Program.cs
+- tests/LocalEats.Api.Tests/SessionHttpTests.cs
+

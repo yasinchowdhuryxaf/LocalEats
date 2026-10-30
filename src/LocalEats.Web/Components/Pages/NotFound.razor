@@ -14,5 +14,5 @@
     private string OriginalPath => HttpContext?.Features.Get<IStatusCodeReExecuteFeature>()?.OriginalPath
         ?? HttpContext?.Request.Path.Value ?? string.Empty;
     private string Heading => OriginalPath.StartsWith("/restaurants/", StringComparison.OrdinalIgnoreCase)
-        ? "Restaurant not found" : "Page not found";
+        ? "Restaurant not found" : OriginalPath.StartsWith("/orders/", StringComparison.OrdinalIgnoreCase) ? "Order not found" : "Page not found";
 }

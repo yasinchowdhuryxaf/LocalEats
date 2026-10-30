@@ -20,7 +20,7 @@
     <p>Review the details before placing a demo cash order. No delivery fee or online payment is charged.</p>
     @if (receipt is not null)
     {
-        <section class="checkout-panel" role="status"><h2>Order created</h2><p>Order @receipt.Number · @receipt.Status</p><p>Total: BDT @Money(receipt.TotalMinor) · @(receipt.PaymentMethod == "CashOnDelivery" ? "Cash on Delivery" : "Pay at Pickup")</p><p>No online payment was collected. Full order details are coming next.</p><a href="/restaurants">Browse restaurants</a></section>
+        <section class="checkout-panel" role="status"><h2>Order created</h2><p>Order @receipt.Number · @receipt.Status</p><p>Total: BDT @Money(receipt.TotalMinor) · @(receipt.PaymentMethod == "CashOnDelivery" ? "Cash on Delivery" : "Pay at Pickup")</p><p>No online payment was collected.</p><a href="@($"/orders/{receipt.Id}")">View order details</a> · <a href="/restaurants">Browse restaurants</a></section>
     }
     else if (failed)
     {

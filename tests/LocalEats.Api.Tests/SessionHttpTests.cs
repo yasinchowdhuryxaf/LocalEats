@@ -29,6 +29,158 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
 
+    private async Task<Guid> PlaceOrderFixtureAsync(bool pickup = false)
+    {
+        var draft = await OrderDraftAsync();
+        if (pickup) { draft.Contact.PaymentMethod = "PayAtPickup"; draft.Contact.Address = null; }
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var result = await scope.ServiceProvider.GetRequiredService<OrderPlacementService>()
+            .PlaceAsync(draft.User, Guid.NewGuid(), draft.Basket, draft.Contact, draft.Quote);
+        Assert.True(result.Succeeded, result.Error);
+        return Assert.IsType<OrderReceipt>(result.Receipt).Id;
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task OrderDetails_Owner_SeesSavedPurchaseAndContact(bool pickup)
+    {
+        var id = await PlaceOrderFixtureAsync(pickup);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        var itemId = await db.OrderItems.Where(item => item.OrderId == id).Select(item => item.MenuItemId).SingleAsync();
+        await db.MenuItems.Where(item => item.Id == itemId).ExecuteUpdateAsync(update => update.SetProperty(item => item.Name, "Changed catalog item").SetProperty(item => item.PriceMinor, 1));
+        using var client = Client();
+        await Login(client, email, Password);
+        var response = await client.GetAsync($"/orders/{id}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore);
+        var html = WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
+        foreach (var expected in new[] { "Order details", "Menu item 01", "246.92", "123.46", "Order customer", "+8801712345678", "Test notes", "Pending", pickup ? "Pickup — no delivery address" : "Sample road" })
+            Assert.Contains(expected, html);
+        Assert.DoesNotContain("Changed catalog item", html);
+    }
+
+    [Theory]
+    [InlineData("Customer", false)]
+    [InlineData("Manager", false)]
+    [InlineData("Admin", true)]
+    public async Task OrderDetails_ForeignCustomerOrRole_EnforcesExistingPolicy(string role, bool allowed)
+    {
+        var id = await PlaceOrderFixtureAsync();
+        string number;
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var other = new ApplicationUser { UserName = $"other-{Guid.NewGuid():N}@example.test", Email = $"other-{Guid.NewGuid():N}@example.test" };
+            Assert.True((await users.CreateAsync(other)).Succeeded);
+            extraUserId = other.Id;
+            var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+            var order = await db.Orders.SingleAsync(row => row.Id == id);
+            number = order.OrderNumber;
+            order.CustomerId = other.Id;
+            await db.SaveChangesAsync();
+            var user = await users.FindByEmailAsync(email);
+            Assert.NotNull(user);
+            Assert.True((await users.RemoveFromRoleAsync(user, "Customer")).Succeeded);
+            Assert.True((await users.AddToRoleAsync(user, role)).Succeeded);
+        }
+        using var client = Client();
+        await Login(client, email, Password);
+        var response = await client.GetAsync($"/orders/{id}");
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Equal(allowed ? HttpStatusCode.OK : HttpStatusCode.NotFound, response.StatusCode);
+        if (allowed) Assert.Contains(number, html);
+        else
+        {
+            Assert.Contains("Order not found", html);
+            Assert.DoesNotContain(number, html);
+            Assert.DoesNotContain("Sample road", html);
+            var missing = await client.GetAsync($"/orders/{Guid.NewGuid()}");
+            Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
+            Assert.Contains("Order not found", await missing.Content.ReadAsStringAsync());
+        }
+    }
+
+    [Theory]
+    [InlineData("not-a-guid")]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    public async Task OrderDetails_InvalidId_IsSafeNotFound(string id)
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var response = await client.GetAsync($"/orders/{id}");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Contains("Order not found", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task OrderDetails_Anonymous_ChallengesWithReturnUrl()
+    {
+        var id = await PlaceOrderFixtureAsync();
+        using var client = Client();
+        var response = await client.GetAsync($"/orders/{id}");
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("/login?ReturnUrl=", response.Headers.Location?.ToString());
+        Assert.DoesNotContain("Order customer", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task OrderDetails_Items_AreBoundedAndPageIsClamped()
+    {
+        var id = await PlaceOrderFixtureAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        db.OrderItems.AddRange(Enumerable.Range(1, 21).Select(index => new OrderItem { Id = Guid.NewGuid(), OrderId = id, ItemName = $"Snapshot {index:D2}", Quantity = 1, UnitPriceMinor = 1, LineTotalMinor = 1 }));
+        var order = await db.Orders.SingleAsync(row => row.Id == id);
+        order.TotalMinor += 21;
+        await db.SaveChangesAsync();
+        using var client = Client();
+        await Login(client, email, Password);
+        var first = await client.GetStringAsync($"/orders/{id}?page=invalid");
+        Assert.Contains("Page 1 of 2", first);
+        Assert.DoesNotContain("Snapshot 21", first);
+        var last = await client.GetStringAsync($"/orders/{id}?page=2147483647");
+        Assert.Contains("Page 2 of 2", last);
+        Assert.Contains("Snapshot 21", last);
+        Assert.DoesNotContain("Menu item 01", last);
+    }
+
+    private sealed class FailingOrderDetailsReader : IOrderDetailsReader
+    {
+        public Task<OrderDetails?> GetAsync(Guid orderId, Guid customerId, bool isAdmin, int page, int pageSize, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Private provider detail");
+    }
+
+    [Fact]
+    public async Task OrderDetails_ReadFails_ShowsSafeRetry()
+    {
+        var id = await PlaceOrderFixtureAsync();
+        await using var failing = Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddScoped<IOrderDetailsReader, FailingOrderDetailsReader>()));
+        using var client = failing.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await Login(client, email, Password);
+        var response = await client.GetAsync($"/orders/{id}");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Try again", html);
+        Assert.DoesNotContain("Private provider detail", html);
+    }
+
+    [Fact]
+    public async Task OrderDetails_LegacyMissingContactAndItems_UsesHonestFallbacks()
+    {
+        var id = await PlaceOrderFixtureAsync();
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+        await db.Orders.Where(row => row.Id == id).ExecuteUpdateAsync(update => update.SetProperty(row => row.ContactName, (string?)null).SetProperty(row => row.ContactPhone, (string?)null).SetProperty(row => row.DeliveryAddress, (string?)null).SetProperty(row => row.Notes, (string?)null).SetProperty(row => row.PaymentMethod, (string?)null));
+        await db.OrderItems.Where(row => row.OrderId == id).ExecuteDeleteAsync();
+        using var client = Client();
+        await Login(client, email, Password);
+        var html = await client.GetStringAsync($"/orders/{id}");
+        Assert.Contains("Not recorded", html);
+        Assert.Contains("No saved item details", html);
+    }
+
     private async Task<(ClaimsPrincipal User, BasketSnapshot Basket, CheckoutInput Contact, string Quote)> OrderDraftAsync()
     {
         var slug = await CreateMenuFixtureAsync("open", 2);
@@ -149,6 +301,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
         var response = await client.PostAsync("/checkout", new FormUrlEncodedContent(fields));
         Assert.Equal("/checkout?placed=true", response.Headers.Location?.ToString());
         Assert.Contains("Order created", await client.GetStringAsync("/checkout?placed=true"));
+        Assert.Contains("View order details", await client.GetStringAsync("/checkout?placed=true"));
         Assert.Contains("Your basket is empty", await client.GetStringAsync("/basket"));
         await AddBasketItem(client, slug, await MenuItemId(slug));
         Assert.Equal("/checkout?placed=true", (await client.PostAsync("/checkout", new FormUrlEncodedContent(fields))).Headers.Location?.ToString());

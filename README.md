@@ -209,7 +209,7 @@ After signing in, open `/account` or select Your account from `/session`. Email 
 
 ## Customer dashboard (TASK-011)
 
-Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens the public directory; menus are available, while full order confirmation/history remain later tasks. Explicit safe local login return URLs remain honored.
+Customers land at /dashboard after default login. It shows a welcome, account actions and an order-history placeholder. Browse restaurants opens the public directory; menus are available, while customer order history remains a later task. Explicit safe local login return URLs remain honored.
 
 ## Manager dashboard (TASK-012)
 
@@ -243,4 +243,8 @@ Open http://127.0.0.1:5015/basket or use the header basket link. Filled baskets 
 
 ## Checkout review (TASK-021)
 
-Open /checkout and sign in as a Customer. Review contact details, Cash on Delivery (address required) or Pay at Pickup, notes and current server-checked item prices. The Review checkout action validates only: no order/payment is created and the basket is retained. Empty/unavailable baskets block review. A small browser submit-state script handles pending feedback; application rules remain C#. After a valid review, choose Place order to commit a cash order. TASK-022 revalidates current catalog prices/availability in one database transaction, saves purchase/contact snapshots and prevents duplicate submissions. A minimal receipt appears after redirect. Delivery fee is zero in this development slice; no online charge occurs. Full order details and history remain TASK-023/024.
+Open /checkout and sign in as a Customer. Review contact details, Cash on Delivery (address required) or Pay at Pickup, notes and current server-checked item prices. The Review checkout action validates only: no order/payment is created and the basket is retained. Empty/unavailable baskets block review. A small browser submit-state script handles pending feedback; application rules remain C#. After a valid review, choose Place order to commit a cash order. TASK-022 revalidates current catalog prices/availability in one database transaction, saves purchase/contact snapshots and prevents duplicate submissions. A minimal receipt appears after redirect. Delivery fee is zero in this development slice; no online charge occurs. Use View order details for confirmation; customer history remains TASK-024.
+
+## Order confirmation (TASK-023)
+
+After placing a cash order, choose View order details on the receipt. /orders/{id} shows saved purchased items and prices, persisted total, status, UTC order time and contact/address/payment information. Customers can read only their own orders; Admin has existing-order read access and Manager-only accounts remain denied until assignment support in TASK-025. Missing or inaccessible orders return 404. Item lists page by 20; legacy missing data is labeled honestly. Customer history (/orders) remains TASK-024.

@@ -346,10 +346,12 @@ Tests:
 
 ## TASK-023: Build order confirmation
 
-- [ ] Create `/orders/{id}`.
-- [ ] Show order number, restaurant, items, total, address, and status.
-- [ ] Restrict access to the order owner, manager, or admin according to policy.
-- [ ] Show a not-found result for another customer’s order.
+- [x] Create `/orders/{id}`.
+- [x] Show order number, restaurant, items, total, address, and status.
+- [x] Restrict access to the order owner, manager, or admin according to policy.
+- [x] Show a not-found result for another customer’s order.
+
+Existing policy: Manager-only accounts remain denied until TASK-025 persists verified restaurant assignments. Customer/Admin resource scoping and denial are covered by real HTTP tests.
 
 ## TASK-024: Build customer order history
 
@@ -707,11 +709,11 @@ Do not begin these features until the existing MVP is reliable and the business 
 ## Current Work
 
 - Current phase: Phase 5 - Basket and Order Creation
-- Current task: TASK-023
-- Branch: `codex/task-022-order-transaction`
+- Current task: TASK-024
+- Branch: `codex/task-023-order-confirmation`
 - Status: [ ] Not started
-- Last completed task: TASK-022 - Create order transaction
-- Next task: TASK-023 - Build order confirmation
+- Last completed task: TASK-023 - Build order confirmation
+- Next task: TASK-024 - Build customer order history
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

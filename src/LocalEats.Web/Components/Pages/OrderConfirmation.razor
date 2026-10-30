@@ -9,6 +9,8 @@
 <PageTitle>Order details | LocalEats</PageTitle>
 <section class="order-page" aria-labelledby="order-heading">
     <a href="/restaurants">Browse restaurants</a>
+    @if (HttpContext?.User.IsInRole(LocalEats.Application.Security.RoleNames.Customer) == true)
+    { <p><a href="/orders">Your order history</a></p> }
     @if (failed)
     {
         <h1 id="order-heading">Order unavailable</h1><p role="alert">We couldn’t load the order. Please try again.</p>

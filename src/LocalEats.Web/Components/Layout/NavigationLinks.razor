@@ -9,6 +9,7 @@
     @if (HttpContext.User.IsInRole(RoleNames.Customer))
     {
         <a href="/dashboard">Dashboard</a>
+        <a href="/orders">Your orders</a>
     }
     @if (HttpContext.User.IsInRole(RoleNames.Manager))
     {

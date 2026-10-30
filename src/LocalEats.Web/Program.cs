@@ -37,6 +37,7 @@ builder.Services.AddScoped<BasketService>();
 builder.Services.AddScoped<CheckoutService>();
 builder.Services.AddScoped<OrderPlacementService>();
 builder.Services.AddScoped<OrderDetailsService>();
+builder.Services.AddScoped<OrderHistoryService>();
 if (!builder.Environment.IsDevelopment())
 {
     builder.Services.ConfigureApplicationCookie(options =>

@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-023 order confirmation complete. TASK-024 customer order history is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-024 customer order history complete. TASK-025 restaurant manager relationship is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -108,24 +108,24 @@ These documents should be copied into the repository under `docs/` where appropr
 
 ### Current phase
 
-**Phase 5 - Basket and Order Creation**
+**Phase 6 - Restaurant Manager and Menu Management**
 
 ### Current task
 
-**TASK-024 - Build customer order history (not started)**
+**TASK-025 - Add restaurant manager relationship (not started)**
 
 ### Current task objective
 
-Implement /orders customer history in TASK-024 with own-user scoping, pagination and an empty state. TASK-023 implements /orders/{id} with the existing resource policy; Manager-only access waits for TASK-025. TASK-022 transactional creation now rechecks canonical prices/availability and saves immutable purchase snapshots. Registration, login/logout, authorization and self-service account/profile editing are implemented.
+Implement the persisted manager/restaurant relationship and verified resource authorization in TASK-025. TASK-024 implements own-customer history with pagination and an empty state. TASK-023 implements /orders/{id} with the existing resource policy; Manager-only access waits for TASK-025. TASK-022 transactional creation now rechecks canonical prices/availability and saves immutable purchase snapshots. Registration, login/logout, authorization and self-service account/profile editing are implemented.
 
 ### Current status
 
-TASK-001 through TASK-023 complete. TASK-024 is next. See the latest activity entries for verification and portable-copy results.
+TASK-001 through TASK-024 complete. TASK-025 is next. See the latest activity entries for verification and portable-copy results.
 
 ## 5. Next Tasks
 
-1. TASK-024 - Build customer order history.
-2. TASK-025 - Add restaurant manager relationship.
+1. TASK-025 - Add restaurant manager relationship.
+2. TASK-026 - Build restaurant profile management.
 
 ## 6. Known Decisions
 
@@ -269,8 +269,8 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-024: Build customer order history.
-Implement only paginated own-customer order history and links to existing order details; do not implement manager tools or online payment integration.
+We are starting TASK-025: Add restaurant manager relationship.
+Implement only the verified manager/restaurant relationship, migration and resource authorization tests; do not implement profile/menu CRUD or online payment integration.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
 Verify Docker, migration history, development seeding, health endpoints, formatting, build and tests. Update the records only with verified results.
@@ -573,3 +573,37 @@ Changed files for TASK-023:
 
 
 - TASK-023 hosted CI passed all steps: https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/41117826807 . Feature commit 60705c5 is published on main. Desktop MY_PROJECT refreshed; all 200 portable source files matched SHA-256 hashes. Final record is copied and hashes checked after this entry. Browser preview remains at checkout sign-in, with filled-page visual QA explicitly outstanding. Existing runner/action notices remain non-blocking maintenance. Next TASK-024.
+
+### 2026-10-31 - TASK-024 customer order history
+
+- Added CustomerAccess-protected /orders with order number, current restaurant name/status, persisted total/currency, UTC order date and details links. Proposed light-project pagination: 10 rows, newest CreatedAt then Id descending, safe page parsing and clamping before SQL Skip/Take. Empty history explains the next action; read failures return safe 503 retry.
+- Application OrderHistoryService requires authenticated Customer/GUID claims. Infrastructure applies the same CustomerId predicate to both the aggregate count and projected page. Browser customerId/userId fields cannot select an owner. The list does not load private contact/address fields or item collections. Existing details authorization remains unchanged; Admin/Manager-only accounts do not gain customer-history access.
+- Added Your orders navigation, dashboard View order history in place of the completed-feature placeholder, and a Customer-only history link on order details. No database schema/migration, new dependency, order mutation, restaurant status change or privilege grant. Milestone 3 cash-order checkbox reconciled with already verified TASK-022 behavior.
+- Added 5 Application and 10 HTTP/PostgreSQL cases for claims/role guards, signed customer identity, empty/no-store state, dashboard links, own-only counts/rows despite alternate-owner query fields, newest/stable pagination across tied dates, high/invalid page inputs, saved detail links and injected read failure. Updated prior dashboard placeholder expectations; adjusted order-number test parsing for Blazor CSS scope attributes. Final suite: 217 passed (8 Domain, 64 Application, 145 HTTP/database), zero failures/skips; E2E project remains pending TASK-045.
+- Final format verification passed. Full Release solution build and updated test-project build passed with zero warnings/errors. Both localhost health endpoints returned 200. Read-only LocalEats verification confirmed both samples remain closed and zero development orders; no ARAM PROJECT resource accessed or modified.
+- User completed Customer sign-in manually. Browser verified header Your orders → /orders and its real No orders yet/Browse restaurants state. Checked widths 375, 768 and default 1191: document scroll width matched viewport at each width (no horizontal overflow). Restored normal viewport, saved ignored generated proof outputs/order-history.png, and marked the signed-in history tab as a deliverable. Filled cards/pagination were verified through isolated HTTP fixtures; their visual QA and browser E2E automation remain outstanding. No development sample was opened to manufacture orders.
+- Hosted CI and Desktop MY_PROJECT source/hash verification follow. Next TASK-025 starts Phase 6; manager assignment/access is not implemented early.
+
+Changed files for TASK-024:
+- README.md
+- docs/ARCHITECTURE.md
+- docs/MEMORY.md
+- docs/PERMISSIONS.md
+- docs/SECURITY.md
+- docs/TASKS.md
+- docs/TEST_PLAN.md
+- src/LocalEats.Application/Orders/IOrderHistoryReader.cs
+- src/LocalEats.Application/Orders/OrderHistoryEntry.cs
+- src/LocalEats.Application/Orders/OrderHistoryPage.cs
+- src/LocalEats.Application/Orders/OrderHistoryService.cs
+- src/LocalEats.Infrastructure/DependencyInjection.cs
+- src/LocalEats.Infrastructure/Persistence/OrderHistoryReader.cs
+- src/LocalEats.Web/Components/Layout/NavigationLinks.razor
+- src/LocalEats.Web/Components/Pages/Dashboard.razor
+- src/LocalEats.Web/Components/Pages/OrderConfirmation.razor
+- src/LocalEats.Web/Components/Pages/OrderHistory.razor
+- src/LocalEats.Web/Components/Pages/OrderHistory.razor.css
+- src/LocalEats.Web/Program.cs
+- tests/LocalEats.Api.Tests/SessionHttpTests.cs
+- tests/LocalEats.Application.Tests/OrderHistoryServiceTests.cs
+

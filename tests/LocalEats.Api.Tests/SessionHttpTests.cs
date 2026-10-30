@@ -29,6 +29,125 @@ public sealed class SessionHttpTests : IAsyncLifetime
     private Guid? extraUserId;
     private readonly List<Guid> directoryIds = [];
 
+    [Fact]
+    public async Task History_Empty_IsPrivateAndLinkedFromDashboard()
+    {
+        using var client = Client();
+        await Login(client, email, Password);
+        var response = await client.GetAsync("/orders");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Contains("No orders yet", html);
+        Assert.Contains("Browse restaurants", html);
+        Assert.Contains("href=\"/orders\"", await client.GetStringAsync("/dashboard"));
+        Assert.DoesNotContain("Order history is coming soon", await client.GetStringAsync("/dashboard"));
+    }
+
+    [Fact]
+    public async Task History_PaginatesOnlyOwnOrdersAndLinksSavedDetails()
+    {
+        var firstId = await PlaceOrderFixtureAsync();
+        List<Order> orders;
+        Guid foreignId;
+        await using (var scope = Factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<LocalEatsDbContext>();
+            var first = await db.Orders.SingleAsync(order => order.Id == firstId);
+            var now = DateTimeOffset.UtcNow.AddDays(-1);
+            first.CreatedAt = now;
+            first.OrderNumber = $"HISTORY-{Guid.NewGuid():N}";
+            orders = [first];
+            for (var index = 1; index <= 11; index++)
+            {
+                var order = new Order
+                {
+                    Id = Guid.NewGuid(),
+                    CustomerId = first.CustomerId,
+                    RestaurantId = first.RestaurantId,
+                    OrderNumber = $"HISTORY-{Guid.NewGuid():N}",
+                    TotalMinor = 10000 + index,
+                    Currency = "BDT",
+                    CreatedAt = now.AddMinutes(index == 2 ? 1 : index),
+                    UpdatedAt = now
+                };
+                db.Orders.Add(order); orders.Add(order);
+            }
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var other = new ApplicationUser { UserName = $"history-{Guid.NewGuid():N}@example.test", Email = $"history-{Guid.NewGuid():N}@example.test" };
+            Assert.True((await users.CreateAsync(other)).Succeeded);
+            extraUserId = other.Id;
+            var foreign = new Order
+            {
+                Id = Guid.NewGuid(),
+                CustomerId = other.Id,
+                RestaurantId = first.RestaurantId,
+                OrderNumber = $"PRIVATE-{Guid.NewGuid():N}",
+                TotalMinor = 999999,
+                CreatedAt = now.AddDays(1),
+                UpdatedAt = now
+            };
+            foreignId = foreign.Id;
+            db.Orders.Add(foreign);
+            await db.SaveChangesAsync();
+        }
+        using var client = Client();
+        await Login(client, email, Password);
+        var expected = orders.OrderByDescending(order => order.CreatedAt).ThenByDescending(order => order.Id).ToArray();
+        static string[] Numbers(string html) => Regex.Matches(html, "<p class=\"order-number\"[^>]*>([^<]+)</p>").Select(match => match.Groups[1].Value).ToArray();
+        var firstHtml = await client.GetStringAsync($"/orders?customerId={extraUserId}&userId={extraUserId}");
+        Assert.Equal(expected.Take(10).Select(order => order.OrderNumber), Numbers(firstHtml));
+        Assert.Contains("12 orders", firstHtml);
+        Assert.Contains("Page 1 of 2", firstHtml);
+        Assert.Contains("BDT", firstHtml);
+        Assert.Contains("Status: Pending", firstHtml);
+        Assert.Contains("UTC", firstHtml);
+        Assert.DoesNotContain("PRIVATE-", firstHtml);
+        Assert.DoesNotContain(foreignId.ToString(), firstHtml);
+        var last = await client.GetStringAsync("/orders?page=2147483647");
+        Assert.Equal(expected.Skip(10).Select(order => order.OrderNumber), Numbers(last));
+        Assert.Contains("Page 2 of 2", last);
+        Assert.Equal(Numbers(last), Numbers(await client.GetStringAsync("/orders?page=2")));
+        Assert.Contains("href=\"/orders/" + firstId, last);
+        var details = await client.GetStringAsync($"/orders/{firstId}");
+        Assert.Contains("Order details", details);
+        Assert.Contains("Your order history", details);
+        Assert.Contains("Menu item 01", details);
+    }
+
+    [Theory]
+    [InlineData("invalid")]
+    [InlineData("-1")]
+    [InlineData("99999999999999999999")]
+    public async Task History_InvalidPage_FallsBackSafely(string page)
+    {
+        var id = await PlaceOrderFixtureAsync();
+        using var client = Client();
+        await Login(client, email, Password);
+        var response = await client.GetAsync($"/orders?page={page}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("href=\"/orders/" + id, await response.Content.ReadAsStringAsync());
+    }
+
+    private sealed class FailingOrderHistoryReader : IOrderHistoryReader
+    {
+        public Task<OrderHistoryPage> GetAsync(Guid customerId, int page, int pageSize, CancellationToken cancellationToken = default)
+            => throw new InvalidOperationException("Private history provider failure");
+    }
+
+    [Fact]
+    public async Task History_ReadFails_ShowsSafeRetry()
+    {
+        await using var failing = Factory.WithWebHostBuilder(builder => builder.ConfigureServices(services => services.AddScoped<IOrderHistoryReader, FailingOrderHistoryReader>()));
+        using var client = failing.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await Login(client, email, Password);
+        var response = await client.GetAsync("/orders");
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        var html = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Try again", html);
+        Assert.DoesNotContain("Private history provider failure", html);
+    }
+
     private async Task<Guid> PlaceOrderFixtureAsync(bool pickup = false)
     {
         var draft = await OrderDraftAsync();
@@ -799,7 +918,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Dashboard_Customer_ShowsEncodedWelcomeAndHonestPlaceholders()
+    public async Task Dashboard_Customer_ShowsEncodedWelcomeAndHistoryLink()
     {
         await using (var scope = Factory.Services.CreateAsyncScope())
         {
@@ -814,7 +933,8 @@ public sealed class SessionHttpTests : IAsyncLifetime
         var html = await client.GetStringAsync("/dashboard");
         Assert.Contains("Welcome, &lt;script&gt;alert(1)&lt;/script&gt;!", html);
         Assert.DoesNotContain("<script>alert(1)</script>", html);
-        Assert.Contains("Order history is coming soon", html);
+        Assert.Contains("View order history", html);
+        Assert.Contains("href=\"/orders\"", html);
         Assert.Contains("href=\"/restaurants\"", html);
         Assert.Contains("href=\"/account\"", html);
         Assert.Contains("href=\"/logout\"", html);
@@ -873,14 +993,14 @@ public sealed class SessionHttpTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Dashboard_BlankProfile_ShowsFallbackWelcomeAndFutureOrderState()
+    public async Task Dashboard_BlankProfile_ShowsFallbackWelcomeAndHistoryLink()
     {
         using var client = Client();
         await Login(client, email, Password);
         var html = await client.GetStringAsync("/dashboard");
         Assert.Contains("Welcome back!", html);
-        Assert.Contains("Order history is coming soon", html);
-        Assert.Contains("When ordering is available", html);
+        Assert.Contains("View order history", html);
+        Assert.Contains("See your placed orders and their current status.", html);
         Assert.DoesNotContain("We couldn", html);
     }
 
@@ -1085,6 +1205,9 @@ public sealed class SessionHttpTests : IAsyncLifetime
 
     [Theory]
     [InlineData(ApplicationRoles.Customer, "/session/customer", true)]
+    [InlineData(ApplicationRoles.Customer, "/orders", true)]
+    [InlineData(ApplicationRoles.Manager, "/orders", false)]
+    [InlineData(ApplicationRoles.Admin, "/orders", false)]
     [InlineData(ApplicationRoles.Customer, "/dashboard", true)]
     [InlineData(ApplicationRoles.Customer, "/checkout", true)]
     [InlineData(ApplicationRoles.Manager, "/checkout", false)]
@@ -1182,6 +1305,7 @@ public sealed class SessionHttpTests : IAsyncLifetime
     [InlineData("/session/customer")]
     [InlineData("/dashboard")]
     [InlineData("/checkout")]
+    [InlineData("/orders")]
     [InlineData("/manager")]
     [InlineData("/manager/restaurant")]
     [InlineData("/manager/menu")]

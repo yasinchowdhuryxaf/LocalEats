@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<ICheckoutCatalogReader, BasketProductReader>();
         services.AddScoped<IOrderPlacementStore, OrderPlacementStore>();
         services.AddScoped<IOrderDetailsReader, OrderDetailsReader>();
+        services.AddScoped<IOrderHistoryReader, OrderHistoryReader>();
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
 

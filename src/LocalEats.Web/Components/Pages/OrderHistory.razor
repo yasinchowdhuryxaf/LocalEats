@@ -1,0 +1,79 @@
+@page "/orders"
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using LocalEats.Application.Orders
+@using LocalEats.Application.Security
+@attribute [Authorize(Policy = RolePolicies.Customer)]
+@inject OrderHistoryService Orders
+@inject ILogger<OrderHistory> Logger
+
+<PageTitle>Your orders | LocalEats</PageTitle>
+<section class="history-page" aria-labelledby="history-heading">
+    <a href="/dashboard">← Your dashboard</a>
+    <h1 id="history-heading">Your orders</h1>
+    <p>Review your placed orders and open their saved details.</p>
+    @if (failed)
+    {
+        <p role="alert">We couldn’t load your orders. Please try again or sign in again.</p>
+        <a href="/orders">Try again</a>
+    }
+    else if (history is not null)
+    {
+        @if (history.Total == 0)
+        {
+            <section class="history-card"><h2>No orders yet</h2><p>After you place an order, it will appear here.</p><a class="button-link" href="/restaurants">Browse restaurants</a></section>
+        }
+        else
+        {
+            <p>@history.Total @(history.Total == 1 ? "order" : "orders") · Newest first</p>
+            <div class="history-list">
+                @foreach (var order in history.Items)
+                {
+                    <article class="history-card">
+                        <h2>@order.RestaurantName</h2>
+                        <p class="order-number">@order.Number</p>
+                        <p>Ordered @order.CreatedAt.ToString("dd MMM yyyy HH:mm", CultureInfo.InvariantCulture) UTC</p>
+                        <p><strong>Status: @order.Status</strong></p>
+                        <p>Total: @order.Currency @Money(order.TotalMinor)</p>
+                        <a href="@($"/orders/{order.Id}")" aria-label="@($"View order {order.Number}")">View order details</a>
+                    </article>
+                }
+            </div>
+            @if (history.TotalPages > 1)
+            {
+                <nav aria-label="Order history pages">
+                    @if (history.Page > 1) { <a href="@PageUrl(history.Page - 1)">Previous orders</a> }
+                    <span>Page @history.Page of @history.TotalPages</span>
+                    @if (history.Page < history.TotalPages) { <a href="@PageUrl(history.Page + 1)">Next orders</a> }
+                </nav>
+            }
+        }
+    }
+</section>
+
+@code {
+    [SupplyParameterFromQuery(Name = "page")] public string? PageQuery { get; set; }
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+    private OrderHistoryPage? history;
+    private bool failed;
+    private int Page => int.TryParse(PageQuery, out var value) ? Math.Max(1, value) : 1;
+    private static string Money(long minor) => (minor / 100m).ToString("N2", CultureInfo.InvariantCulture);
+    private static string PageUrl(int page) => $"/orders?page={page}";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        failed = false;
+        history = null;
+        try
+        {
+            if (HttpContext is not null) history = await Orders.GetAsync(HttpContext.User, Page, HttpContext.RequestAborted);
+            failed = history is null;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError("Order history load failed with error type {ErrorType}.", exception.GetType().Name);
+            failed = true;
+        }
+        if (failed && HttpContext?.Response.HasStarted == false) HttpContext.Response.StatusCode = 503;
+    }
+}

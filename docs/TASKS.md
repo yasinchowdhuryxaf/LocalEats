@@ -355,10 +355,10 @@ Existing policy: Manager-only accounts remain denied until TASK-025 persists ver
 
 ## TASK-024: Build customer order history
 
-- [ ] Create `/orders`.
-- [ ] Add pagination.
-- [ ] Show order date, restaurant, total, and status.
-- [ ] Add an empty state.
+- [x] Create `/orders`.
+- [x] Add pagination.
+- [x] Show order date, restaurant, total, and status.
+- [x] Add an empty state.
 
 # Phase 6: Restaurant Manager and Menu Management
 
@@ -689,7 +689,7 @@ Do not begin these features until the existing MVP is reliable and the business 
 - [x] Customer can browse restaurants.
 - [x] Customer can view a menu.
 - [x] Customer can use the basket.
-- [ ] Customer can place a cash/pickup order.
+- [x] Customer can place a cash/pickup order.
 
 ## Milestone 4: Restaurant operations complete
 
@@ -708,12 +708,12 @@ Do not begin these features until the existing MVP is reliable and the business 
 
 ## Current Work
 
-- Current phase: Phase 5 - Basket and Order Creation
-- Current task: TASK-024
-- Branch: `codex/task-023-order-confirmation`
+- Current phase: Phase 6 - Restaurant Manager and Menu Management
+- Current task: TASK-025
+- Branch: `codex/task-024-order-history`
 - Status: [ ] Not started
-- Last completed task: TASK-023 - Build order confirmation
-- Next task: TASK-024 - Build customer order history
+- Last completed task: TASK-024 - Build customer order history
+- Next task: TASK-025 - Add restaurant manager relationship
 - Known issues: E2E automation remains TASK-045; manager restaurant assignments remain TASK-025.
 
 Update this section after every completed task.

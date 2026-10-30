@@ -714,6 +714,6 @@ Do not begin these features until the existing MVP is reliable and the business 
 - Status: [ ] Not started
 - Last completed task: TASK-025 - Add restaurant manager relationship
 - Next task: TASK-026 - Build restaurant profile management
-- Known issues: E2E automation remains TASK-045; manager profile/menu/order screens remain TASK-026 onward; trusted role/assignment provisioning is not exposed.
+- Known issues: TASK-025 hosted CI run 41121180408 queued awaiting a runner; verify before TASK-026. E2E automation remains TASK-045; manager profile/menu/order screens remain TASK-026 onward; trusted role/assignment provisioning is not exposed.
 
 Update this section after every completed task.

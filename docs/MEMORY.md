@@ -7,7 +7,7 @@ This file records the current project state for the developer and OpenAI Codex. 
 
 ### Overall status
 
-**TASK-025 manager restaurant relationship complete. TASK-026 restaurant profile management is next.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
+**TASK-025 implemented and verified locally; hosted CI is queued awaiting a runner. TASK-026 restaurant profile management is next after checking that run.** The product definition, architecture, design system, project rules, and implementation task plan are prepared. The .NET solution and project structure have been scaffolded, restored, built, tested, and format-checked.
 
 ### Product
 
@@ -269,7 +269,7 @@ The next Codex session should begin with this prompt:
 Read AGENTS.md, docs/PRD.md, docs/ARCHITECTURE.md, docs/RULES.md,
 docs/DESIGN.md, docs/TASKS.md, and docs/MEMORY.md.
 
-We are starting TASK-026: Build restaurant profile management.
+Before starting TASK-026, check TASK-025 CI run 41121180408 and resolve any failure. It was queued awaiting a runner at handoff. Then start TASK-026: Build restaurant profile management.
 Implement only assigned-restaurant profile management and its validation/access tests; do not implement menu/order management, role grants or online payment integration.
 First inspect the repository and provide a plan listing the projects,
 project references, files to create, and verification commands.
@@ -648,3 +648,5 @@ Changed files for TASK-025:
 - tests/LocalEats.Api.Tests/SessionHttpTests.cs
 - tests/LocalEats.Application.Tests/ResourceAuthorizationServiceTests.cs
 
+
+- TASK-025 final local/source handoff: feature commit 6c23105 is published on main. Hosted CI https://github.com/yasinchowdhuryxaf/LocalEats/actions/runs/41121180408 remains QUEUED with zero job steps started; no hosted pass is claimed. Previous LocalEats feature/documentation runs succeeded. All 215 portable source files matched SHA-256 hashes; this final record is copied and hashes rechecked after the entry. Next session must inspect that CI run before TASK-026. All mandatory local format/build/tests passed; no implementation failure remains.
